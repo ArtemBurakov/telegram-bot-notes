@@ -200,9 +200,15 @@ const mainMenu = new MenuTemplate(() => 'Main Menu')
 
 
 const deleteNoteMenu = new MenuTemplate('Are you sure you want to delete this note?')
-deleteNoteMenu.interact('Yes, delete the note', 'delete_yes', {
+deleteNoteMenu.interact('✅ Yes, delete the note', 'delete_yes', {
 	do: async (ctx) => {
 		await deleteNote(ctx)
+		await menuMiddleware.replyToContext(ctx, '/notes/')
+		return false
+	}
+})
+deleteNoteMenu.interact('❌ Nope, nevermind', 'delete_nos', {
+	do: async (ctx) => {
 		await menuMiddleware.replyToContext(ctx, '/notes/')
 		return false
 	}
@@ -224,7 +230,7 @@ const newNoteUpdateHandler = new StatelessQuestion('update_note', async (context
 })
 
 const updateNoteMenu = new MenuTemplate('Update this note')
-updateNoteMenu.interact('Update note name', 'update_note_name', {
+updateNoteMenu.interact('📒 Update note name', 'update_note_name', {
 	do: async (context, path) => {
 		context.session.note_update_type = 'name'
 		const noteName = 'Tell me the name of your note.'
@@ -233,7 +239,7 @@ updateNoteMenu.interact('Update note name', 'update_note_name', {
 		return false
 	}
 })
-updateNoteMenu.interact('Update note text', 'update_note_text', {
+updateNoteMenu.interact('📎 Update note text', 'update_note_text', {
 	do: async (context, path) => {
 		context.session.note_update_type = 'text'
 		const noteText = 'Tell me the text of your note.'
@@ -242,7 +248,7 @@ updateNoteMenu.interact('Update note text', 'update_note_text', {
 		return false
 	}
 })
-updateNoteMenu.interact('Update note time', 'update_note_time', {
+updateNoteMenu.interact('⏰ Update note time', 'update_note_time', {
 	do: async (context, path) => {
 		context.session.note_update_type = 'time'
 		const noteTime = 'Tell me the time of your note.'
@@ -276,8 +282,8 @@ const menuBodyNotes = async (context) => {
 }
 
 const detailsNoteTemplate = new MenuTemplate(menuBodyNotes)
-detailsNoteTemplate.submenu('Update', 'update_note', updateNoteMenu)
-detailsNoteTemplate.submenu('Delete', 'delete_note', deleteNoteMenu)
+detailsNoteTemplate.submenu('✏️ Update', 'update_note', updateNoteMenu)
+detailsNoteTemplate.submenu('🗑 Delete', 'delete_note', deleteNoteMenu)
 detailsNoteTemplate.manualRow(createBackMainMenuButtons())
 
 // Note menu
