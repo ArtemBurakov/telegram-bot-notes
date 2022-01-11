@@ -1,0 +1,13 @@
+{
+  "devDependencies": {
+    "typescript": "^4.5.4"
+  },
+  "dependencies": {
+    "@grammyjs/menu": "^1.0.4",
+    "@grammyjs/stateless-question": "^3.0.1",
+    "dotenv": "^10.0.0",
+    "grammy": "^1.6.1",
+    "grammy-inline-menu": "^7.0.2",
+    "mysql2": "^2.3.3"
+  }
+}
