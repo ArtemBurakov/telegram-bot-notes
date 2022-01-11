@@ -203,7 +203,7 @@ const deleteNoteMenu = new MenuTemplate('Are you sure you want to delete this no
 deleteNoteMenu.interact('Yes, delete the note', 'delete_yes', {
 	do: async (ctx) => {
 		await deleteNote(ctx)
-		await menuMiddleware.replyToContext(ctx, '/')
+		await menuMiddleware.replyToContext(ctx, '/notes/')
 		return false
 	}
 })
