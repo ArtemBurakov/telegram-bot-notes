@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS telegram_bot;
-CREATE DATABASE IF NOT EXISTS telegram_bot;
-USE telegram_bot;
+DROP DATABASE IF EXISTS telegram_bot_notes;
+CREATE DATABASE IF NOT EXISTS telegram_bot_notes;
+USE telegram_bot_notes;
 
 DROP TABLE IF EXISTS users;
 
