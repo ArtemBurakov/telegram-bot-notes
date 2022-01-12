@@ -89,15 +89,8 @@ const getNotes = async (context) => {
 
 // Get list of notes name
 const getNotesName = async (context) => {
-	const user_id = context.from.id
-
 	try {
-		const result = await noteModel.find(user_id, ACTIVE_STATUS)
-
-		let notesArray = []
-		result.forEach(element => {
-			notesArray.push(element.name)
-		})
+		const notesArray = Array(context.session.notes_length).fill('👀 View note')
 		return notesArray
 	} catch (error) {
 		console.log('Error `getNotes` -> ' + error)
@@ -275,6 +268,7 @@ const menuBodyNotes = async (context) => {
 	const pageIndex = (context.session.page ?? 1) - 1
 	const currentPageEntries = result.slice(pageIndex * ENTRIES_PER_PAGE_NOTE, (pageIndex + ENTRIES_PER_PAGE_NOTE) * 1)
 	context.session.selectedNote = currentPageEntries[0]
+	context.session.notes_length = result.length
 
 	return await noteView(context)
 }
@@ -662,7 +656,15 @@ bot.command('start', async ctx => {
 })
 
 const initial = () => {
-	return { selectedNote: null, note_update_type: null, note_name: null, note_text: null, note_time: null, note_status: null };
+	return {
+		notes_length: null,
+		selectedNote: null,
+		note_update_type: null,
+		note_name: null,
+		note_text: null,
+		note_time: null,
+		note_status: null
+	};
 }
 bot.use(session({ initial }));
 
