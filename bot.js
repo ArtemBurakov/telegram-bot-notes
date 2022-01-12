@@ -11,16 +11,6 @@ const DELETED_STATUS = 0
 const ACTIVE_STATUS = 10
 const DONE_STATUS = 20
 
-// Convert timestamp to milliseconds
-const timestampToMilliseconds = async (timestamp) => {
-	if (timestamp) {
-		const time = Math.floor(new Date(`${timestamp} +0000 GMT +0200`) / 1000)
-		return time
-	}
-
-	return NULL
-}
-
 // New note
 const newNote = async (context) => {
 	const user_id = context.from.id
@@ -30,7 +20,8 @@ const newNote = async (context) => {
 
 	try {
 		await noteModel.create(user_id, name, text, deadline_at)
-		await context.reply('New hometask added successful!')
+		context.session.page = null
+		await context.reply('New note added successful!')
 	} catch (error) {
 		console.log(error)
 		await context.reply('Something has gone wrong.')
@@ -73,7 +64,8 @@ const updateNote = async (context) => {
 				break
 
 			case 'status':
-				await noteModel.update({status: context.message.text}, id, user_id)
+				await noteModel.update({status: context.session.note_status}, id, user_id)
+				context.session.page = null
 				break
 		}
 		await context.reply('Note updated!')
@@ -112,6 +104,27 @@ const getNotesName = async (context) => {
 	}
 }
 
+const noteView = async (context) => {
+	let note_view = ``
+	const note_name = context.session.selectedNote.name
+	const note_text = context.session.selectedNote.text
+	const deadline_at = context.session.selectedNote.deadline_at
+
+	if (deadline_at) {
+		const date = await convertMS(deadline_at*1000)
+
+		if (date) {
+			note_view = `📒 ${note_name}\n\n 📎 ${note_text}\n\n 💣 Time left:${date.day}${date.hour}${date.minute}${date.seconds}\n`
+		} else {
+			note_view = `📒 ${note_name}\n\n 📎 ${note_text}\n\n ❌ Your note is missing!\n`
+		}
+	} else {
+		note_view = `📒 ${note_name}\n\n 📎 ${note_text}\n`
+	}
+
+	return note_view
+}
+
 //Conver timestamp in human readable date
 const convertMS = async (deadline) => {
 	let date = Date.now();
@@ -131,7 +144,7 @@ const convertMS = async (deadline) => {
 
 	if (day >= 5) {
 	  return {
-		day: `${day} days`,
+		day: ` ${day} days`,
 		hour: '',
 		minute: '',
 		seconds: ''
@@ -140,8 +153,8 @@ const convertMS = async (deadline) => {
 
 	if (day <= 5 && day >= 1) {
 	  return {
-		day: `${day} days`,
-		hour: `${hour} hours`,
+		day: ` ${day} days`,
+		hour: ` ${hour} hours`,
 		minute: '',
 		seconds: ''
 	  }
@@ -150,8 +163,8 @@ const convertMS = async (deadline) => {
 	if (day <= 1 && hour >= 1) {
 	  return {
 		day: '',
-		hour: `${hour} hours`,
-		minute: minute == 0 ? '' : `${minute} minutes`,
+		hour: ` ${hour} hours`,
+		minute: minute == 0 ? '' : ` ${minute} minutes`,
 		seconds: ''
 	  }
 	}
@@ -160,39 +173,25 @@ const convertMS = async (deadline) => {
 	  return {
 		day: '',
 		hour: '',
-		minute: minute == 0 ? '' : `${minute} minutes`,
-		seconds: seconds == 0 ? '' :  `${seconds} seconds`
+		minute: minute == 0 ? '' : ` ${minute} minutes`,
+		seconds: seconds == 0 ? '' :  ` ${seconds} seconds`
 	  }
 	}
 }
 
-const noteView = async (context) => {
-	let note_view = ``
-	const note_name = context.session.selectedNote.name
-	const note_text = context.session.selectedNote.text
-	const deadline_at = context.session.selectedNote.deadline_at
-
-	if (deadline_at) {
-		const date = await convertMS(deadline_at*1000)
-
-		if (date) {
-			note_view = `📒 ${note_name}\n\n 📎 ${note_text}\n\n 💣 Time left: ${date.day} ${date.hour} ${date.minute} ${date.seconds}\n`
-		} else {
-			note_view = `📕 ${note_name}\n\n 📎 ${note_text}\n\n 💣 Time left: missing!\n`
-		}
-	} else {
-		note_view = `📒 ${note_name}\n\n 📎 ${note_text}\n`
+// Convert timestamp to milliseconds
+const timestampToMilliseconds = async (timestamp) => {
+	if (timestamp) {
+		const time = Math.floor(new Date(`${timestamp} +0000 GMT +0200`) / 1000)
+		return time
 	}
 
-	return note_view
+	return NULL
 }
-
-
 
 //-------------------- Main menu --------------------//
 const mainMenu = new MenuTemplate(() => 'Main Menu')
 //---------------------------------------------------//
-
 
 
 
@@ -207,9 +206,9 @@ deleteNoteMenu.interact('✅ Yes, delete the note', 'delete_yes', {
 		return false
 	}
 })
-deleteNoteMenu.interact('❌ Nope, nevermind', 'delete_nos', {
+deleteNoteMenu.interact('❌ Nope, nevermind', 'delete_no', {
 	do: async (ctx) => {
-		await menuMiddleware.replyToContext(ctx, '/notes/')
+		await menuMiddleware.replyToContext(ctx, `/notes/note:${ctx.session.selectedNote.name}/`)
 		return false
 	}
 })
@@ -225,8 +224,7 @@ deleteNoteMenu.manualRow(createBackMainMenuButtons())
 
 const newNoteUpdateHandler = new StatelessQuestion('update_note', async (context, additionalState) => {
 	await updateNote(context)
-	// await replyMenuToContext(notesMenu, context, additionalState)
-	await menuMiddleware.replyToContext(context, '/notes/')
+	await menuMiddleware.replyToContext(context, `/notes/note:${context.session.selectedNote.name}/`)
 })
 
 const updateNoteMenu = new MenuTemplate('Update this note')
@@ -282,6 +280,15 @@ const menuBodyNotes = async (context) => {
 }
 
 const detailsNoteTemplate = new MenuTemplate(menuBodyNotes)
+detailsNoteTemplate.interact('✅ Done', 'done_note', {
+	do: async ctx => {
+		ctx.session.note_update_type = 'status'
+		ctx.session.note_status = DONE_STATUS
+		await updateNote(ctx)
+		await menuMiddleware.replyToContext(ctx, '/notes/')
+		return false
+	}
+})
 detailsNoteTemplate.submenu('✏️ Update', 'update_note', updateNoteMenu)
 detailsNoteTemplate.submenu('🗑 Delete', 'delete_note', deleteNoteMenu)
 detailsNoteTemplate.manualRow(createBackMainMenuButtons())
@@ -655,7 +662,7 @@ bot.command('start', async ctx => {
 })
 
 const initial = () => {
-	return { selectedNote: null, note_update_type: null, note_name: null, note_text: null, note_time: null };
+	return { selectedNote: null, note_update_type: null, note_name: null, note_text: null, note_time: null, note_status: null };
 }
 bot.use(session({ initial }));
 
