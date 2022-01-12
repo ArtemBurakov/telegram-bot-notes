@@ -90,10 +90,13 @@ const getNotes = async (context) => {
 // Get list of notes name
 const getNotesName = async (context) => {
 	try {
-		const notesArray = Array(context.session.notes_length).fill('👀 View note')
+		let notesArray = []
+		if (context.session.notes_length)
+			notesArray = Array(context.session.notes_length).fill('👀 View note')
+
 		return notesArray
 	} catch (error) {
-		console.log('Error `getNotes` -> ' + error)
+		console.log('Error `getNotesHame` -> ' + error)
 	}
 }
 
@@ -262,8 +265,10 @@ const emptyTextNotes = 'Currently you do not have notes. Try to add a new one.'
 
 const menuBodyNotes = async (context) => {
 	const result = await getNotes(context)
-	if (!result.length)
+	if (!result.length) {
+		context.session.notes_length = result.length
 		return emptyTextNotes
+	}
 
 	const pageIndex = (context.session.page ?? 1) - 1
 	const currentPageEntries = result.slice(pageIndex * ENTRIES_PER_PAGE_NOTE, (pageIndex + ENTRIES_PER_PAGE_NOTE) * 1)
