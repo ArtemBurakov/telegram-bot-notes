@@ -92,7 +92,7 @@ const getNotesName = async (context) => {
 	try {
 		let notesArray = []
 		if (context.session.notes_length)
-			notesArray = Array(context.session.notes_length).fill('👀 View note')
+			notesArray = Array(context.session.notes_length).fill('👀 View')
 
 		return notesArray
 	} catch (error) {
@@ -185,46 +185,42 @@ const timestampToMilliseconds = async (timestamp) => {
 	return NULL
 }
 
+
+
 //-------------------- Main menu --------------------//
 const mainMenu = new MenuTemplate(() => 'Main Menu')
 //---------------------------------------------------//
 
 
 
-
-
-
+//------------------------------------------------- Delete Note ----------------------------------------------//
 const deleteNoteMenu = new MenuTemplate('Are you sure you want to delete this note?')
-deleteNoteMenu.interact('✅ Yes, delete the note', 'delete_yes', {
+deleteNoteMenu.interact('✅ Yes, delete the note', 'yes', {
 	do: async (ctx) => {
 		await deleteNote(ctx)
 		await menuMiddleware.replyToContext(ctx, '/notes/')
 		return false
 	}
 })
-deleteNoteMenu.interact('❌ Nope, nevermind', 'delete_no', {
+deleteNoteMenu.interact('❌ Nope, nevermind', 'no', {
 	do: async (ctx) => {
-		await menuMiddleware.replyToContext(ctx, `/notes/note:${ctx.session.selectedNote.name}/`)
+		await menuMiddleware.replyToContext(ctx, `/notes/note:👀 View/`)
 		return false
 	}
 })
 deleteNoteMenu.manualRow(createBackMainMenuButtons())
+//-----------------------------------------------------------------------------------------------------------//
 
 
 
-
-
-
-
-
-
+//------------------------------------------------- Update Note ----------------------------------------------//
 const newNoteUpdateHandler = new StatelessQuestion('update_note', async (context, additionalState) => {
 	await updateNote(context)
-	await menuMiddleware.replyToContext(context, `/notes/note:${context.session.selectedNote.name}/`)
+	await menuMiddleware.replyToContext(context, `/notes/note:👀 View/`)
 })
 
 const updateNoteMenu = new MenuTemplate('Update this note')
-updateNoteMenu.interact('📒 Update note name', 'update_note_name', {
+updateNoteMenu.interact('📒 Update note name', 'note_name', {
 	do: async (context, path) => {
 		context.session.note_update_type = 'name'
 		const noteName = 'Tell me the name of your note.'
@@ -233,7 +229,7 @@ updateNoteMenu.interact('📒 Update note name', 'update_note_name', {
 		return false
 	}
 })
-updateNoteMenu.interact('📎 Update note text', 'update_note_text', {
+updateNoteMenu.interact('📎 Update note text', 'note_text', {
 	do: async (context, path) => {
 		context.session.note_update_type = 'text'
 		const noteText = 'Tell me the text of your note.'
@@ -242,7 +238,7 @@ updateNoteMenu.interact('📎 Update note text', 'update_note_text', {
 		return false
 	}
 })
-updateNoteMenu.interact('⏰ Update note time', 'update_note_time', {
+updateNoteMenu.interact('⏰ Update note time', 'note_time', {
 	do: async (context, path) => {
 		context.session.note_update_type = 'time'
 		const noteTime = 'Tell me the time of your note.'
@@ -252,14 +248,37 @@ updateNoteMenu.interact('⏰ Update note time', 'update_note_time', {
 	}
 })
 updateNoteMenu.manualRow(createBackMainMenuButtons())
+//------------------------------------------------------------------------------------------------------------//
 
 
 
+//------------------------------------------------- New Note -------------------------------------------------//
+const newNoteNameHandler = new StatelessQuestion('new_name', async (context, additionalNoteState) => {
+	context.session.note_name = context.message.text
+	const noteText = 'Tell me the text of your note.'
+	const additionalNoteNameState = additionalNoteState
+	await newNoteTextHandler.replyWithMarkdown(context, noteText, additionalNoteNameState)
+	return false
+})
+
+const newNoteTextHandler = new StatelessQuestion('new_text', async (context, additionalNoteNameState) => {
+	context.session.note_text = context.message.text
+	const noteText = 'Tell me the deadline time of your note.'
+	const additionalNoteTextState = additionalNoteNameState
+	await newNoteTimeHandler.replyWithMarkdown(context, noteText, additionalNoteTextState)
+	return false
+})
+
+const newNoteTimeHandler = new StatelessQuestion('new_time', async (context, additionalNoteTextState) => {
+	context.session.note_time = context.message.text
+	await newNote(context)
+	await menuMiddleware.replyToContext(context, '/notes/')
+})
+//------------------------------------------------------------------------------------------------------------//
 
 
 
-
-//------------------------------------------------- Notes ----------------------------------------------//
+//------------------------------------------------ Notes -----------------------------------------------------//
 const ENTRIES_PER_PAGE_NOTE = 1
 const emptyTextNotes = 'Currently you do not have notes. Try to add a new one.'
 
@@ -279,7 +298,7 @@ const menuBodyNotes = async (context) => {
 }
 
 const detailsNoteTemplate = new MenuTemplate(menuBodyNotes)
-detailsNoteTemplate.interact('✅ Done', 'done_note', {
+detailsNoteTemplate.interact('✅ Done', 'done', {
 	do: async ctx => {
 		ctx.session.note_update_type = 'status'
 		ctx.session.note_status = DONE_STATUS
@@ -288,8 +307,8 @@ detailsNoteTemplate.interact('✅ Done', 'done_note', {
 		return false
 	}
 })
-detailsNoteTemplate.submenu('✏️ Update', 'update_note', updateNoteMenu)
-detailsNoteTemplate.submenu('🗑 Delete', 'delete_note', deleteNoteMenu)
+detailsNoteTemplate.submenu('✏️ Update', 'update', updateNoteMenu)
+detailsNoteTemplate.submenu('🗑 Delete', 'delete', deleteNoteMenu)
 detailsNoteTemplate.manualRow(createBackMainMenuButtons())
 
 // Note menu
@@ -303,58 +322,7 @@ notesMenu.chooseIntoSubmenu('note', (context) => getNotesName(context), detailsN
 	  context.session.page = page
 	}
 })
-notesMenu.manualRow(createBackMainMenuButtons())
-// Set Notes menu as submenu in MainMenu
-mainMenu.submenu('🔐 Private Notes', 'notes', notesMenu)
-//------------------------------------------------------------------------------------------------------//
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//------------------------------------------------- Manage Notes ---------------------------------------------//
-
-const newNoteNameHandler = new StatelessQuestion('new_note_name', async (context, additionalNoteState) => {
-	context.session.note_name = context.message.text
-	const noteText = 'Tell me the text of your note.'
-	const additionalNoteNameState = additionalNoteState
-	await newNoteTextHandler.replyWithMarkdown(context, noteText, additionalNoteNameState)
-	return false
-})
-
-const newNoteTextHandler = new StatelessQuestion('new_note_text', async (context, additionalNoteNameState) => {
-	context.session.note_text = context.message.text
-	const noteText = 'Tell me the deadline time of your note.'
-	const additionalNoteTextState = additionalNoteNameState
-	await newNoteTimeHandler.replyWithMarkdown(context, noteText, additionalNoteTextState)
-	return false
-})
-
-const newNoteTimeHandler = new StatelessQuestion('new_note_time', async (context, additionalNoteTextState) => {
-	context.session.note_time = context.message.text
-	await newNote(context)
-	//await replyMenuToContext(mainMenu, context, additionalNoteTextState)
-	await menuMiddleware.replyToContext(context, '/notes/')
-})
-
-// Add manage notes menu
-const manageNoteMenu = new MenuTemplate('Here you can manage your notes. For example: create a new note, change note, change priority or delete.')
-manageNoteMenu.interact('🪄 Add a new note', 'new_note', {
+notesMenu.interact('🪄 Add a new note', 'new_note', {
 	do: async (context, path) => {
 		const noteName = 'Tell me the name of your note.'
 		const additionalNoteState = getMenuOfPath(path)
@@ -362,92 +330,10 @@ manageNoteMenu.interact('🪄 Add a new note', 'new_note', {
 		return false
 	}
 })
-manageNoteMenu.manualRow(createBackMainMenuButtons())
+notesMenu.manualRow(createBackMainMenuButtons())
 // Set Notes menu as submenu in MainMenu
-mainMenu.submenu('🛠 Manage your private notes', 'manage_note', manageNoteMenu)
+mainMenu.submenu('🔐 Private Notes', 'notes', notesMenu)
 //------------------------------------------------------------------------------------------------------------//
-
-
-
-
-
-
-
-
-
-
-
-
-//------------------------------------------------- Add Note ----------------------------------------------//
-
-// // New note
-// const newNote = async (context) => {
-// 	const user_id = context.from.id
-// 	const name = context.session.note_name
-// 	const text = context.session.note_text
-// 	const deadline_at = context.session.note_time
-
-// 	try {
-// 		await noteModel.create(user_id, name, text, deadline_at)
-// 		await context.reply('New hometask added successful!')
-// 	} catch (error) {
-// 		console.log(error)
-// 		await context.reply('Something has gone wrong.')
-// 	}
-// }
-
-// const newNoteNameHandler = new StatelessQuestion('new_note_name', async (context, additionalNoteState) => {
-// 	context.session.note_name = context.message.text
-// 	const noteText = 'Tell me the text of your note.'
-// 	const additionalNoteNameState = additionalNoteState
-// 	await newNoteTextHandler.replyWithMarkdown(context, noteText, additionalNoteNameState)
-// 	return false
-// })
-
-// const newNoteTextHandler = new StatelessQuestion('new_note_text', async (context, additionalNoteNameState) => {
-// 	context.session.note_text = context.message.text
-// 	const noteText = 'Tell me the deadline time of your note.'
-// 	const additionalNoteTextState = additionalNoteNameState
-// 	await newNoteTimeHandler.replyWithMarkdown(context, noteText, additionalNoteTextState)
-// 	return false
-// })
-
-// const newNoteTimeHandler = new StatelessQuestion('new_note_time', async (context, additionalNoteTextState) => {
-// 	context.session.note_time = context.message.text
-// 	await newNote(context)
-// 	//await replyMenuToContext(mainMenu, context, additionalNoteTextState)
-// 	await menuMiddleware.replyToContext(context, '/notes/')
-// })
-
-// // Add note menu
-// const addNoteMenu = new MenuTemplate('Here you can add new note simply by pressing add new note button below:')
-// addNoteMenu.interact('Add a new note', 'new_note', {
-// 	do: async (context, path) => {
-// 		const noteName = 'Tell me the name of your note.'
-// 		const additionalNoteState = getMenuOfPath(path)
-// 		await newNoteNameHandler.replyWithMarkdown(context, noteName, additionalNoteState)
-// 		return false
-// 	}
-// })
-// addNoteMenu.manualRow(createBackMainMenuButtons())
-// // Set Notes menu as submenu in MainMenu
-// mainMenu.submenu('Add a new private note [beta]', 'add_note', addNoteMenu)
-//---------------------------------------------------------------------------------------------------------//
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -538,24 +424,7 @@ mainMenu.submenu('🛠 Manage your private notes', 'manage_note', manageNoteMenu
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //------------------------------------------------- Subjects menu -------------------------------------------------//
-
 // // New subject
 // const newSubject = async (context) => {
 // 	const user_id = context.from.id
@@ -613,21 +482,6 @@ mainMenu.submenu('🛠 Manage your private notes', 'manage_note', manageNoteMenu
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //-------------------- Create user --------------------//
 const createUser = async (ctx) => {
 	const username = ctx.message.from.username
@@ -635,13 +489,12 @@ const createUser = async (ctx) => {
 	const user_id = ctx.message.from.id
 
 	try {
-		await userModel.create(username, first_name, user_id)
+		await userModel.create(!username ? null : username, first_name, user_id)
 	} catch (error) {
 		console.error('User already exist');
 	}
 }
 //-----------------------------------------------------//
-
 
 
 
