@@ -100,6 +100,7 @@ const getNotesName = async (context) => {
 	}
 }
 
+// Note view
 const noteView = async (context) => {
 	let note_view = ``
 	const note_name = context.session.selectedNote.name
@@ -119,6 +120,24 @@ const noteView = async (context) => {
 	}
 
 	return note_view
+}
+
+// Menu body notes
+const menuBodyNotes = async (context) => {
+	const emptyTextNotes = 'Currently you do not have notes. Try to add a new one.'
+
+	const result = await getNotes(context)
+	if (!result.length) {
+		context.session.notes_length = result.length
+		return emptyTextNotes
+	}
+
+	const pageIndex = (context.session.page ?? 1) - 1
+	const currentPageEntries = result.slice(pageIndex * ENTRIES_PER_PAGE_NOTE, (pageIndex + ENTRIES_PER_PAGE_NOTE) * 1)
+	context.session.selectedNote = currentPageEntries[0]
+	context.session.notes_length = result.length
+
+	return await noteView(context)
 }
 
 //Conver timestamp in human readable date
@@ -194,7 +213,7 @@ const mainMenu = new MenuTemplate(() => 'Main Menu')
 
 
 //------------------------------------------------- Delete Note ----------------------------------------------//
-const deleteNoteMenu = new MenuTemplate('Are you sure you want to delete this note?')
+const deleteNoteMenu = new MenuTemplate('You are about to delete your note. Is that correct?')
 deleteNoteMenu.interact('✅ Yes, delete the note', 'yes', {
 	do: async (ctx) => {
 		await deleteNote(ctx)
@@ -219,11 +238,11 @@ const newNoteUpdateHandler = new StatelessQuestion('update_note', async (context
 	await menuMiddleware.replyToContext(context, `/notes/note:👀 View/`)
 })
 
-const updateNoteMenu = new MenuTemplate('Update this note')
+const updateNoteMenu = new MenuTemplate(menuBodyNotes)
 updateNoteMenu.interact('📒 Update note name', 'note_name', {
 	do: async (context, path) => {
 		context.session.note_update_type = 'name'
-		const noteName = 'Tell me the name of your note.'
+		const noteName = 'OK. Send me the new name for your note.'
 		const additionalNoteState = getMenuOfPath(path)
 		await newNoteUpdateHandler.replyWithMarkdown(context, noteName, additionalNoteState)
 		return false
@@ -232,7 +251,7 @@ updateNoteMenu.interact('📒 Update note name', 'note_name', {
 updateNoteMenu.interact('📎 Update note text', 'note_text', {
 	do: async (context, path) => {
 		context.session.note_update_type = 'text'
-		const noteText = 'Tell me the text of your note.'
+		const noteText = 'OK. Send me the new text for your note.'
 		const additionalNoteState = getMenuOfPath(path)
 		await newNoteUpdateHandler.replyWithMarkdown(context, noteText, additionalNoteState)
 		return false
@@ -241,7 +260,7 @@ updateNoteMenu.interact('📎 Update note text', 'note_text', {
 updateNoteMenu.interact('⏰ Update note time', 'note_time', {
 	do: async (context, path) => {
 		context.session.note_update_type = 'time'
-		const noteTime = 'Tell me the time of your note.'
+		const noteTime = 'OK. Send me the new time (also deadline time/due to) for your note. You have two options: the first is to specify the date for example: \`2022-01-10 14:45\` (the time need to be in \`24 hours format\`), the second does not specify the time, ie write \`0\` and your note will be without the attached time.'
 		const additionalNoteState = getMenuOfPath(path)
 		await newNoteUpdateHandler.replyWithMarkdown(context, noteTime, additionalNoteState)
 		return false
@@ -255,7 +274,7 @@ updateNoteMenu.manualRow(createBackMainMenuButtons())
 //------------------------------------------------- New Note -------------------------------------------------//
 const newNoteNameHandler = new StatelessQuestion('new_name', async (context, additionalNoteState) => {
 	context.session.note_name = context.message.text
-	const noteText = 'Tell me the text of your note.'
+	const noteText = 'OK. Send me the text for your note.'
 	const additionalNoteNameState = additionalNoteState
 	await newNoteTextHandler.replyWithMarkdown(context, noteText, additionalNoteNameState)
 	return false
@@ -263,7 +282,7 @@ const newNoteNameHandler = new StatelessQuestion('new_name', async (context, add
 
 const newNoteTextHandler = new StatelessQuestion('new_text', async (context, additionalNoteNameState) => {
 	context.session.note_text = context.message.text
-	const noteText = 'Tell me the deadline time of your note.'
+	const noteText = 'OK. Send me the time (also deadline time/due to) for your note. You have two options: the first is to specify the date for example: \`2022-01-10 14:45\` (the time need to be in \`24 hours format\`), the second does not specify the time, ie write \`0\` and your note will be without the attached time.'
 	const additionalNoteTextState = additionalNoteNameState
 	await newNoteTimeHandler.replyWithMarkdown(context, noteText, additionalNoteTextState)
 	return false
@@ -280,22 +299,6 @@ const newNoteTimeHandler = new StatelessQuestion('new_time', async (context, add
 
 //------------------------------------------------ Notes -----------------------------------------------------//
 const ENTRIES_PER_PAGE_NOTE = 1
-const emptyTextNotes = 'Currently you do not have notes. Try to add a new one.'
-
-const menuBodyNotes = async (context) => {
-	const result = await getNotes(context)
-	if (!result.length) {
-		context.session.notes_length = result.length
-		return emptyTextNotes
-	}
-
-	const pageIndex = (context.session.page ?? 1) - 1
-	const currentPageEntries = result.slice(pageIndex * ENTRIES_PER_PAGE_NOTE, (pageIndex + ENTRIES_PER_PAGE_NOTE) * 1)
-	context.session.selectedNote = currentPageEntries[0]
-	context.session.notes_length = result.length
-
-	return await noteView(context)
-}
 
 const detailsNoteTemplate = new MenuTemplate(menuBodyNotes)
 detailsNoteTemplate.interact('✅ Done', 'done', {
@@ -324,7 +327,7 @@ notesMenu.chooseIntoSubmenu('note', (context) => getNotesName(context), detailsN
 })
 notesMenu.interact('🪄 Add a new note', 'new_note', {
 	do: async (context, path) => {
-		const noteName = 'Tell me the name of your note.'
+		const noteName = 'OK. Send me the name for your note.'
 		const additionalNoteState = getMenuOfPath(path)
 		await newNoteNameHandler.replyWithMarkdown(context, noteName, additionalNoteState)
 		return false
