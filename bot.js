@@ -13,9 +13,28 @@ const DONE_STATUS = 20
 
 //----------------------------------------------- User -----------------------------------------------
 
+// Create User
+const createUser = async (ctx) => {
+	const username = ctx.message.from.username
+	const first_name = ctx.message.from.first_name
+	const user_id = ctx.message.from.id
+
+	try {
+		await userModel.create(!username ? null : username, first_name, user_id)
+	} catch (error) {
+		console.error('User already exist');
+	}
+}
+
+// Is User admin
+const isAdmin = async (ctx) => {
+	const user_id = ctx.message.from.id
+	const user = await getUser(user_id)
+	user.role == 'Admin' ? ctx.session.isAdmin = false : ctx.session.isAdmin = true
+}
+
 // Get User
-const getUser = async (context) => {
-	const user_id = context.session.selectedHometask.user_id
+const getUser = async (user_id) => {
 	try {
 		const result = await userModel.findOne({user_id})
 		return result
@@ -253,7 +272,7 @@ const hometaskView = async (context) => {
 	const hometask_name = context.session.selectedHometask.name
 	const hometask_text = context.session.selectedHometask.text
 	const deadline_at = context.session.selectedHometask.deadline_at
-	const user = await getUser(context)
+	const user = await getUser(context.session.selectedHometask.user_id)
 
 	if (deadline_at) {
 		const date = await convertMS(deadline_at*1000)
@@ -570,6 +589,7 @@ const ENTRIES_PER_PAGE_HOMETASK = 1
 
 const detailsHometaskTemplate = new MenuTemplate(menuBodyHometask)
 detailsHometaskTemplate.interact('✅ Done', 'done', {
+	hide: ctx => ctx.session.isAdmin,
 	do: async ctx => {
 		ctx.session.hometask_update_type = 'status'
 		ctx.session.hometask_status = DONE_STATUS
@@ -578,8 +598,12 @@ detailsHometaskTemplate.interact('✅ Done', 'done', {
 		return false
 	}
 })
-detailsHometaskTemplate.submenu('✏️ Update', 'update', updateHometaskMenu)
-detailsHometaskTemplate.submenu('🗑 Delete', 'delete', deleteHometaskMenu)
+detailsHometaskTemplate.submenu('✏️ Update', 'update', updateHometaskMenu, {
+	hide: ctx => ctx.session.isAdmin
+})
+detailsHometaskTemplate.submenu('🗑 Delete', 'delete', deleteHometaskMenu, {
+	hide: ctx => ctx.session.isAdmin
+})
 detailsHometaskTemplate.manualRow(createBackMainMenuButtons())
 
 // Hometask menu
@@ -594,6 +618,7 @@ hometaskMenu.chooseIntoSubmenu('hometask', (context) => getHometasksName(context
 	}
 })
 hometaskMenu.interact('🪄 Add a new hometask', 'new_hometask', {
+	hide: ctx => ctx.session.isAdmin,
 	do: async (context) => {
 		const hometaskName = 'OK. Send me the name for your hometask.'
 		await newHometaskNameHandler.replyWithMarkdown(context, hometaskName)
@@ -607,22 +632,6 @@ mainMenu.submenu('📚 Your hometask [beta]', 'hometasks', hometaskMenu)
 
 
 
-//-------------------- Create user --------------------//
-const createUser = async (ctx) => {
-	const username = ctx.message.from.username
-	const first_name = ctx.message.from.first_name
-	const user_id = ctx.message.from.id
-
-	try {
-		await userModel.create(!username ? null : username, first_name, user_id)
-	} catch (error) {
-		console.error('User already exist');
-	}
-}
-//-----------------------------------------------------//
-
-
-
 const menuMiddleware = new MenuMiddleware('/', mainMenu)
 console.log(menuMiddleware.tree())
 
@@ -633,13 +642,9 @@ bot.on('callback_query:data', async (ctx, next) => {
 	return next()
 })
 
-bot.command('start', async ctx => {
-	menuMiddleware.replyToContext(ctx)
-	await createUser(ctx)
-})
-
 const initial = () => {
 	return {
+		isAdmin: true,
 		selectedNote: null,
 		selectedHometask: null,
 		page_hometask: null,
@@ -672,6 +677,12 @@ bot.use(newHometaskTextHandler.middleware())
 bot.use(newHometaskTimeHandler.middleware())
 bot.catch(error => {
 	console.log('bot error', error)
+})
+
+bot.command('start', async ctx => {
+	menuMiddleware.replyToContext(ctx)
+	await createUser(ctx)
+	await isAdmin(ctx)
 })
 
 async function startup() {
