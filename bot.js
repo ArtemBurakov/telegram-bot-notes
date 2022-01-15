@@ -1,15 +1,17 @@
 const { Bot, session } = require('grammy')
-const { MenuTemplate, MenuMiddleware, getMenuOfPath, createBackMainMenuButtons, replyMenuToContext } = require('grammy-inline-menu')
+const { MenuTemplate, MenuMiddleware, getMenuOfPath, createBackMainMenuButtons } = require('grammy-inline-menu')
 const { StatelessQuestion } = require('@grammyjs/stateless-question')
 const userModel = require('./src/models/user.model')
-const subjectModel = require('./src/models/subject.model')
-const homeTaskModel = require('./src/models/hometask.model')
+const hometaskModel = require('./src/models/hometask.model')
 const noteModel = require('./src/models/note.model')
 require('dotenv').config()
 
 const DELETED_STATUS = 0
 const ACTIVE_STATUS = 10
 const DONE_STATUS = 20
+
+
+//----------------------------------------------- Note -----------------------------------------------
 
 // New note
 const newNote = async (context) => {
@@ -132,13 +134,146 @@ const menuBodyNotes = async (context) => {
 		return emptyTextNotes
 	}
 
-	const pageIndex = (context.session.page ?? 1) - 1
+	const pageIndex = (context.session.page_note ?? 1) - 1
 	const currentPageEntries = result.slice(pageIndex * ENTRIES_PER_PAGE_NOTE, (pageIndex + ENTRIES_PER_PAGE_NOTE) * 1)
 	context.session.selectedNote = currentPageEntries[0]
 	context.session.notes_length = result.length
 
 	return await noteView(context)
 }
+//-----------------------------------------------------------------------------------------------------------------
+
+
+
+//----------------------------------------------- Hometask -----------------------------------------------
+
+// New hometask
+const newHometask = async (context) => {
+	const user_id = context.from.id
+	const name = context.session.hometask_name
+	const text = context.session.hometask_text
+	const deadline_at = await timestampToMilliseconds(context.session.hometask_time)
+
+	try {
+		await hometaskModel.create(user_id, name, text, deadline_at)
+		context.session.page = null
+		await context.reply('New hometask added successful!')
+	} catch (error) {
+		console.log(error)
+		await context.reply('Something has gone wrong.')
+	}
+}
+
+// Delete hometask
+const deleteHometask = async (context) => {
+	const id = context.session.selectedHometask.id
+
+	try {
+		await hometaskModel.update({status: DELETED_STATUS}, id)
+		context.session.page = null
+		await context.reply('Hometask deleted!')
+	} catch (error) {
+		console.log(error)
+		await context.reply('Something has gone wrong.')
+	}
+}
+
+// Update hometask
+const updateHometask = async (context) => {
+	const id = context.session.selectedHometask.id
+
+	try {
+		switch (context.session.hometask_update_type) {
+			case 'name':
+				await hometaskModel.update({name: context.message.text}, id)
+				break
+
+			case 'text':
+				await hometaskModel.update({text: context.message.text}, id)
+				break
+
+			case 'time':
+				const time = await timestampToMilliseconds(context.message.text)
+				await hometaskModel.update({deadline_at: time}, id)
+				break
+
+			case 'status':
+				await hometaskModel.update({status: context.session.hometask_status}, id)
+				context.session.page = null
+				break
+		}
+		await context.reply('Hometask updated!')
+	} catch (error) {
+		console.log(error)
+		await context.reply('Something has gone wrong.')
+	}
+}
+
+// Get list of hometask
+const getHometask = async (context) => {
+	try {
+		const result = await hometaskModel.find(ACTIVE_STATUS)
+		return result
+	} catch (error) {
+		console.log('Error `getHometask` -> ' + error)
+	}
+}
+
+// Get list of hometask name
+const getHometasksName = async (context) => {
+	try {
+		let hometasksArray = []
+		if (context.session.hometasks_length)
+			hometasksArray = Array(context.session.hometasks_length).fill('👀 View hometask')
+
+		return hometasksArray
+	} catch (error) {
+		console.log('Error `getHometasksName` -> ' + error)
+	}
+}
+
+// Hometask view
+const hometaskView = async (context) => {
+	let hometask_view = ``
+	const hometask_name = context.session.selectedHometask.name
+	const hometask_text = context.session.selectedHometask.text
+	const deadline_at = context.session.selectedHometask.deadline_at
+
+	if (deadline_at) {
+		const date = await convertMS(deadline_at*1000)
+
+		if (date) {
+			hometask_view = `📒 ${hometask_name}\n\n 📎 ${hometask_text}\n\n 💣 Time left:${date.day}${date.hour}${date.minute}${date.seconds}\n`
+		} else {
+			hometask_view = `📒 ${hometask_name}\n\n 📎 ${hometask_text}\n\n ❌ Your hometask is missing!\n`
+		}
+	} else {
+		hometask_view = `📒 ${hometask_name}\n\n 📎 ${hometask_text}\n`
+	}
+
+	return hometask_view
+}
+
+// Menu body hometask
+const menuBodyHometask = async (context) => {
+	const emptyTextSubject = 'Currently you do not have hometask. Try to add a new one.'
+
+	const result = await getHometask(context)
+	if (!result.length) {
+		context.session.hometasks_length = result.length
+		return emptyTextSubject
+	}
+
+	const pageIndex = (context.session.page_hometask ?? 1) - 1
+	const currentPageEntries = result.slice(pageIndex * ENTRIES_PER_PAGE_HOMETASK, (pageIndex + ENTRIES_PER_PAGE_HOMETASK) * 1)
+	context.session.selectedHometask = currentPageEntries[0]
+	context.session.hometasks_length = result.length
+
+	return await hometaskView(context)
+}
+//-----------------------------------------------------------------------------------------------------------------
+
+
 
 //Conver timestamp in human readable date
 const convertMS = async (deadline) => {
@@ -320,9 +455,9 @@ notesMenu.chooseIntoSubmenu('note', (context) => getNotesName(context), detailsN
 	maxRows: 1,
 	columns: ENTRIES_PER_PAGE_NOTE,
 	disableChoiceExistsCheck: true,
-	getCurrentPage: context => context.session.page,
+	getCurrentPage: context => context.session.page_note,
 	setPage: (context, page) => {
-	  context.session.page = page
+	  context.session.page_note = page
 	}
 })
 notesMenu.interact('🪄 Add a new note', 'new_note', {
@@ -340,147 +475,124 @@ mainMenu.submenu('🔐 Private Notes', 'notes', notesMenu)
 
 
 
-//------------------------------------------------- Selected Subject ----------------------------------------------//
-// const ENTRIES_PER_PAGE_SUBJECT = 1
-// const emptyTextSubject = 'Currently you do not have home task. Try to add a new one.'
-
-// const getSubjectByName = async (context) => {
-// 	const name = context.session.selected_subject_name
-// 	console.log('Find by name ' + name)
-
-// 	try {
-// 		const result = await subjectModel.findOne({name})
-// 		return result
-// 	} catch (error) {
-// 		console.log(error)
-// 	}
-// }
-
-// // New hometask
-// const newHomeTask = async (context) => {
-// 	const user_id = context.from.id
-// 	const subject = await getSubjectByName(context)
-// 	const text = context.message.text
-
-// 	try {
-// 		await homeTaskModel.create(user_id, subject.id, text, 100)
-// 		await context.reply('New hometask added successful!')
-// 	} catch (error) {
-// 		console.log(error)
-// 		await context.reply('Something has gone wrong.')
-// 	}
-// }
-
-// const newHomeTaskHandler = new StatelessQuestion('new_hometask', async (context, additionalHomeTaskState) => {
-// 	await newHomeTask(context)
-// 	await replyMenuToContext(selectedSubjectMenu, context, additionalHomeTaskState)
-// })
-
-// // Get list of hometask
-// const getHometask = async (context) => {
-// 	if (context.match[1])
-// 		context.session.selected_subject_name = context.match[1]
-
-// 	const user_id = context.from.id
-// 	const subject = await getSubjectByName(context)
-
-// 	try {
-// 		const result = await homeTaskModel.find(user_id, subject.id, ACTIVE_STATUS)
-// 		return result
-// 	} catch (error) {
-// 		console.log('Error `getHometask` -> ' + error)
-// 	}
-// }
-
-// const menuBodySubject = async (context) => {
-// 	const result = await getHometask(context)
-// 	if (!result.length)
-// 		return emptyTextSubject
-
-// 	const pageIndex = (context.session.page ?? 1) - 1
-// 	const currentPageEntries = result.slice(pageIndex * ENTRIES_PER_PAGE_SUBJECT, (pageIndex + ENTRIES_PER_PAGE_SUBJECT) * 1)
-
-// 	const hometask_text = `📒 ${currentPageEntries[0].text}`
-// 	return hometask_text
-// }
-
-// const detailsHomeTaskTemplate = new MenuTemplate('Details')
-// detailsHomeTaskTemplate.manualRow(createBackMainMenuButtons())
-
-// // Selected Subject menu
-// const selectedSubjectMenu = new MenuTemplate(menuBodySubject)
-// selectedSubjectMenu.chooseIntoSubmenu('details_hometask', (context) => getHometask(context), detailsHomeTaskTemplate, {
-// 	maxRows: 1,
-// 	columns: ENTRIES_PER_PAGE_SUBJECT,
-// 	disableChoiceExistsCheck: true
-// })
-// selectedSubjectMenu.interact('✏️ Add a new hometask', 'new_hometask', {
-// 	do: async (context, path) => {
-// 		const hometaskNameText = 'Tell me the name of your hometask.'
-// 		const additionalHomeTaskState = getMenuOfPath(path)
-// 		await newHomeTaskHandler.replyWithMarkdown(context, hometaskNameText, additionalHomeTaskState)
-// 		return false
-// 	}
-// })
-// selectedSubjectMenu.manualRow(createBackMainMenuButtons())
-//------------------------------------------------------------------------------------------------------------------//
+//------------------------------------------------- Delete Hometask ----------------------------------------------//
+const deleteHometaskMenu = new MenuTemplate('You are about to delete your hometask. Is that correct?')
+deleteHometaskMenu.interact('✅ Yes, delete the hometask', 'yes', {
+	do: async (ctx) => {
+		await deleteHometask(ctx)
+		await menuMiddleware.replyToContext(ctx, '/hometasks/')
+		return false
+	}
+})
+deleteHometaskMenu.interact('❌ Nope, nevermind', 'no', {
+	do: async (ctx) => {
+		await menuMiddleware.replyToContext(ctx, `/hometasks/hometask:👀 View hometask/`)
+		return false
+	}
+})
+deleteHometaskMenu.manualRow(createBackMainMenuButtons())
+//-----------------------------------------------------------------------------------------------------------//
 
 
 
-//------------------------------------------------- Subjects menu -------------------------------------------------//
-// // New subject
-// const newSubject = async (context) => {
-// 	const user_id = context.from.id
-// 	const name = context.message.text
+//------------------------------------------------- Update Hometask ----------------------------------------------//
+const newHometaskUpdateHandler = new StatelessQuestion('update_hometask', async (context) => {
+	await updateHometask(context)
+	await menuMiddleware.replyToContext(context, `/hometasks/hometask:👀 View hometask/`)
+})
 
-// 	try {
-// 		await subjectModel.create(user_id, name)
-// 		await context.reply('New subject added successful!')
-// 	} catch (error) {
-// 		console.log(error)
-// 		await context.reply('Something has gone wrong.')
-// 	}
-// }
-// const newSubjectHandler = new StatelessQuestion('new_subject', async (context, additionalState) => {
-// 	await newSubject(context)
-// 	await replyMenuToContext(subjectsMenu, context, additionalState)
-// })
+const updateHometaskMenu = new MenuTemplate(menuBodyHometask)
+updateHometaskMenu.interact('📒 Update hometask name', 'hometask_name', {
+	do: async (context) => {
+		context.session.hometask_update_type = 'name'
+		const hometaskName = 'OK. Send me the new name for your hometask.'
+		await newHometaskUpdateHandler.replyWithMarkdown(context, hometaskName)
+		return false
+	}
+})
+updateHometaskMenu.interact('📎 Update hometask text', 'hometask_text', {
+	do: async (context) => {
+		context.session.hometask_update_type = 'text'
+		const hometaskText = 'OK. Send me the new text for your hometask.'
+		await newHometaskUpdateHandler.replyWithMarkdown(context, hometaskText)
+		return false
+	}
+})
+updateHometaskMenu.interact('⏰ Update hometask time', 'hometask_time', {
+	do: async (context) => {
+		context.session.hometask_update_type = 'time'
+		const hometaskTime = 'OK. Send me the new time (also deadline time/due to) for your hometask. You have two options: the first is to specify the date for example: \`2022-01-10 14:45\` (the time need to be in \`24 hours format\`), the second does not specify the time, ie write \`0\` and your hometask will be without the attached time.'
+		await newHometaskUpdateHandler.replyWithMarkdown(context, hometaskTime)
+		return false
+	}
+})
+updateHometaskMenu.manualRow(createBackMainMenuButtons())
+//------------------------------------------------------------------------------------------------------------//
 
-// // Get list of subjects
-// const getSubjects = async (context) => {
-// 	const user_id = context.from.id
 
-// 	try {
-// 		const result = await subjectModel.find(user_id)
 
-// 		let subjectsArray = []
-// 		result.forEach(element => {
-// 			subjectsArray.push(element.name)
-// 		})
-// 		return subjectsArray
-// 	} catch (error) {
-// 		console.log('Error `getSubjects` -> ' + error)
-// 	}
-// }
+//------------------------------------------------- New Hometask -------------------------------------------------//
+const newHometaskNameHandler = new StatelessQuestion('new_name_hometask', async (context) => {
+	context.session.hometask_name = context.message.text
+	const hometaskText = 'OK. Send me the text for your hometask.'
+	await newHometaskTextHandler.replyWithMarkdown(context, hometaskText)
+	return false
+})
 
-// Subjects menu
-//const subjectsMenu = new MenuTemplate('Choose a subject from the list below:')
-// subjectsMenu.chooseIntoSubmenu('subjects', (context) => getSubjects(context), selectedSubjectMenu, {
-// 	columns: 1,
-// 	disableChoiceExistsCheck: true,
-// })
-// subjectsMenu.interact('✏️ Add a new subject', 'new_subject', {
-// 	do: async (context, path) => {
-// 		const subjectText = 'Tell me the name of your new subject.'
-// 		const additionalState = getMenuOfPath(path)
-// 		await newSubjectHandler.replyWithMarkdown(context, subjectText, additionalState)
-// 		return false
-// 	}
-// })
-// subjectsMenu.manualRow(createBackMainMenuButtons())
+const newHometaskTextHandler = new StatelessQuestion('new_text_hometask', async (context) => {
+	context.session.hometask_text = context.message.text
+	const hometaskText = 'OK. Send me the time (also deadline time/due to) for your hometask. You have two options: the first is to specify the date for example: \`2022-01-10 14:45\` (the time need to be in \`24 hours format\`), the second does not specify the time, ie write \`0\` and your hometask will be without the attached time.'
+	await newHometaskTimeHandler.replyWithMarkdown(context, hometaskText)
+	return false
+})
 
-// // Set Subjects menu as submenu in MainMenu
-// mainMenu.submenu('📚 Your subjects [beta]', 'subjects', subjectsMenu)
+const newHometaskTimeHandler = new StatelessQuestion('new_time_hometask', async (context) => {
+	context.session.hometask_time = context.message.text
+	await newHometask(context)
+	await menuMiddleware.replyToContext(context, '/hometasks/')
+})
+//------------------------------------------------------------------------------------------------------------//
+
+
+
+//------------------------------------------------- Hometask ----------------------------------------------//
+const ENTRIES_PER_PAGE_HOMETASK = 1
+
+const detailsHometaskTemplate = new MenuTemplate(menuBodyHometask)
+detailsHometaskTemplate.interact('✅ Done', 'done', {
+	do: async ctx => {
+		ctx.session.hometask_update_type = 'status'
+		ctx.session.hometask_status = DONE_STATUS
+		await updateHometask(ctx)
+		await menuMiddleware.replyToContext(ctx, '/hometasks/')
+		return false
+	}
+})
+detailsHometaskTemplate.submenu('✏️ Update', 'update', updateHometaskMenu)
+detailsHometaskTemplate.submenu('🗑 Delete', 'delete', deleteHometaskMenu)
+detailsHometaskTemplate.manualRow(createBackMainMenuButtons())
+
+// Hometask menu
+const hometaskMenu = new MenuTemplate(menuBodyHometask)
+hometaskMenu.chooseIntoSubmenu('hometask', (context) => getHometasksName(context), detailsHometaskTemplate, {
+	maxRows: 1,
+	columns: ENTRIES_PER_PAGE_HOMETASK,
+	disableChoiceExistsCheck: true,
+	getCurrentPage: context => context.session.page_hometask,
+	setPage: (context, page) => {
+	  context.session.page_hometask = page
+	}
+})
+hometaskMenu.interact('🪄 Add a new hometask', 'new_hometask', {
+	do: async (context) => {
+		const hometaskName = 'OK. Send me the name for your hometask.'
+		await newHometaskNameHandler.replyWithMarkdown(context, hometaskName)
+		return false
+	}
+})
+hometaskMenu.manualRow(createBackMainMenuButtons())
+// Set Hometask menu as submenu in MainMenu
+mainMenu.submenu('📚 Your hometask [beta]', 'hometasks', hometaskMenu)
 //------------------------------------------------------------------------------------------------------------------//
 
 
@@ -518,24 +630,36 @@ bot.command('start', async ctx => {
 
 const initial = () => {
 	return {
-		notes_length: null,
 		selectedNote: null,
+		selectedHometask: null,
+		page_hometask: null,
+		page_note: null,
+		notes_length: null,
+		hometasks_length: null,
 		note_update_type: null,
+		hometask_update_type: null,
 		note_name: null,
 		note_text: null,
 		note_time: null,
-		note_status: null
+		note_status: null,
+		hometask_name: null,
+		hometask_text: null,
+		hometask_time: null,
+		hometask_status: null
 	};
 }
 bot.use(session({ initial }));
 
 bot.use(menuMiddleware.middleware())
-// bot.use(newSubjectHandler.middleware())
-// bot.use(newHomeTaskHandler.middleware())
 bot.use(newNoteUpdateHandler.middleware())
 bot.use(newNoteNameHandler.middleware())
 bot.use(newNoteTextHandler.middleware())
 bot.use(newNoteTimeHandler.middleware())
+
+bot.use(newHometaskUpdateHandler.middleware())
+bot.use(newHometaskNameHandler.middleware())
+bot.use(newHometaskTextHandler.middleware())
+bot.use(newHometaskTimeHandler.middleware())
 bot.catch(error => {
 	console.log('bot error', error)
 })

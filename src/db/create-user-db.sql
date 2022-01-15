@@ -13,25 +13,13 @@ CREATE TABLE IF NOT EXISTS users
      role         ENUM('Admin', 'SuperUser') DEFAULT 'SuperUser'
   );
 
-DROP TABLE IF EXISTS subjects;
-
-CREATE TABLE IF NOT EXISTS subjects
-  (
-     id           INT PRIMARY KEY auto_increment,
-     user_id      INT NOT NULL,
-     name         VARCHAR(100) NOT NULL,
-     status       INT NOT NULL DEFAULT 10,
-     created_at   INT NOT NULL,
-     updated_at   INT NOT NULL
-  );
-
 DROP TABLE IF EXISTS hometasks;
 
 CREATE TABLE IF NOT EXISTS hometasks
   (
      id           INT PRIMARY KEY auto_increment,
      user_id      INT NOT NULL,
-     subject_id   INT NOT NULL,
+     name         VARCHAR(100) NOT NULL,
      text         VARCHAR(255) NOT NULL,
      status       INT NOT NULL DEFAULT 10,
      priority     INT NOT NULL DEFAULT 10,

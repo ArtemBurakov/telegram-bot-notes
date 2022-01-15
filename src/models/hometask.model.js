@@ -13,7 +13,7 @@ class HomeTaskModel {
     tableName = 'hometasks';
 
     findOne = async (params) => {
-        console.log('DATABASE `hometask model` findOne')
+        //console.log('DATABASE `hometask model` findOne')
 
         const { columnSet, values } = multipleColumnSet(params)
 
@@ -26,30 +26,28 @@ class HomeTaskModel {
         return result[0];
     }
 
-    find = async (user_id, subject_id, status) => {
-        console.log('DATABASE `hometask model` find')
+    find = async (status) => {
+        //console.log('DATABASE `hometask model` find')
 
-        const sql = `SELECT * FROM ${this.tableName} WHERE user_id = ? AND subject_id = ? AND status = ? ORDER BY updated_at DESC`;
+        const sql = `SELECT * FROM ${this.tableName} WHERE status = ? ORDER BY updated_at DESC`;
 
-        const result = await query(sql, [user_id, subject_id, status]);
+        const result = await query(sql, [status]);
 
         return result;
     }
 
-    create = async (user_id, subject_id, text, deadline_at) => {
-        console.log('DATABASE `hometask model` create')
-
+    create = async (user_id, name, text, deadline_at) => {
         const sql = `INSERT INTO ${this.tableName}
-        (user_id, subject_id, text, status, created_at, updated_at, deadline_at) VALUES (?,?,?,?,?,?,?)`;
+        (user_id, name, text, status, created_at, updated_at, deadline_at) VALUES (?,?,?,?,?,?,?)`;
 
-        const result = await query(sql, [user_id, subject_id, text, ACTIVE_STATUS, getCurrentTimestamp(), getCurrentTimestamp(), deadline_at]);
+        const result = await query(sql, [user_id, name, text, ACTIVE_STATUS, getCurrentTimestamp(), getCurrentTimestamp(), deadline_at]);
         const affectedRows = result ? result : 0;
 
         return affectedRows;
     }
 
     update = async (params, id) => {
-        console.log('DATABASE `hometask model` update')
+        //console.log('DATABASE `hometask model` update')
 
         const { columnSet, values } = multipleColumnSet(params)
         const sql = `UPDATE ${this.tableName} SET ${columnSet} WHERE id = ?`;
