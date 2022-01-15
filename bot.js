@@ -1,5 +1,5 @@
 const { Bot, session } = require('grammy')
-const { MenuTemplate, MenuMiddleware, getMenuOfPath, createBackMainMenuButtons } = require('grammy-inline-menu')
+const { MenuTemplate, MenuMiddleware, createBackMainMenuButtons } = require('grammy-inline-menu')
 const { StatelessQuestion } = require('@grammyjs/stateless-question')
 const userModel = require('./src/models/user.model')
 const hometaskModel = require('./src/models/hometask.model')
@@ -368,36 +368,33 @@ deleteNoteMenu.manualRow(createBackMainMenuButtons())
 
 
 //------------------------------------------------- Update Note ----------------------------------------------//
-const newNoteUpdateHandler = new StatelessQuestion('update_note', async (context, additionalState) => {
+const newNoteUpdateHandler = new StatelessQuestion('update_note', async (context) => {
 	await updateNote(context)
 	await menuMiddleware.replyToContext(context, `/notes/note:👀 View/`)
 })
 
 const updateNoteMenu = new MenuTemplate(menuBodyNotes)
 updateNoteMenu.interact('📒 Update note name', 'note_name', {
-	do: async (context, path) => {
+	do: async (context) => {
 		context.session.note_update_type = 'name'
 		const noteName = 'OK. Send me the new name for your note.'
-		const additionalNoteState = getMenuOfPath(path)
-		await newNoteUpdateHandler.replyWithMarkdown(context, noteName, additionalNoteState)
+		await newNoteUpdateHandler.replyWithMarkdown(context, noteName)
 		return false
 	}
 })
 updateNoteMenu.interact('📎 Update note text', 'note_text', {
-	do: async (context, path) => {
+	do: async (context) => {
 		context.session.note_update_type = 'text'
 		const noteText = 'OK. Send me the new text for your note.'
-		const additionalNoteState = getMenuOfPath(path)
-		await newNoteUpdateHandler.replyWithMarkdown(context, noteText, additionalNoteState)
+		await newNoteUpdateHandler.replyWithMarkdown(context, noteText)
 		return false
 	}
 })
 updateNoteMenu.interact('⏰ Update note time', 'note_time', {
-	do: async (context, path) => {
+	do: async (context) => {
 		context.session.note_update_type = 'time'
 		const noteTime = 'OK. Send me the new time (also deadline time/due to) for your note. You have two options: the first is to specify the date for example: \`2022-01-10 14:45\` (the time need to be in \`24 hours format\`), the second does not specify the time, ie write \`0\` and your note will be without the attached time.'
-		const additionalNoteState = getMenuOfPath(path)
-		await newNoteUpdateHandler.replyWithMarkdown(context, noteTime, additionalNoteState)
+		await newNoteUpdateHandler.replyWithMarkdown(context, noteTime)
 		return false
 	}
 })
@@ -407,23 +404,21 @@ updateNoteMenu.manualRow(createBackMainMenuButtons())
 
 
 //------------------------------------------------- New Note -------------------------------------------------//
-const newNoteNameHandler = new StatelessQuestion('new_name', async (context, additionalNoteState) => {
+const newNoteNameHandler = new StatelessQuestion('new_name', async (context) => {
 	context.session.note_name = context.message.text
 	const noteText = 'OK. Send me the text for your note.'
-	const additionalNoteNameState = additionalNoteState
-	await newNoteTextHandler.replyWithMarkdown(context, noteText, additionalNoteNameState)
+	await newNoteTextHandler.replyWithMarkdown(context, noteText)
 	return false
 })
 
-const newNoteTextHandler = new StatelessQuestion('new_text', async (context, additionalNoteNameState) => {
+const newNoteTextHandler = new StatelessQuestion('new_text', async (context) => {
 	context.session.note_text = context.message.text
 	const noteText = 'OK. Send me the time (also deadline time/due to) for your note. You have two options: the first is to specify the date for example: \`2022-01-10 14:45\` (the time need to be in \`24 hours format\`), the second does not specify the time, ie write \`0\` and your note will be without the attached time.'
-	const additionalNoteTextState = additionalNoteNameState
-	await newNoteTimeHandler.replyWithMarkdown(context, noteText, additionalNoteTextState)
+	await newNoteTimeHandler.replyWithMarkdown(context, noteText)
 	return false
 })
 
-const newNoteTimeHandler = new StatelessQuestion('new_time', async (context, additionalNoteTextState) => {
+const newNoteTimeHandler = new StatelessQuestion('new_time', async (context) => {
 	context.session.note_time = context.message.text
 	await newNote(context)
 	await menuMiddleware.replyToContext(context, '/notes/')
@@ -461,10 +456,9 @@ notesMenu.chooseIntoSubmenu('note', (context) => getNotesName(context), detailsN
 	}
 })
 notesMenu.interact('🪄 Add a new note', 'new_note', {
-	do: async (context, path) => {
+	do: async (context) => {
 		const noteName = 'OK. Send me the name for your note.'
-		const additionalNoteState = getMenuOfPath(path)
-		await newNoteNameHandler.replyWithMarkdown(context, noteName, additionalNoteState)
+		await newNoteNameHandler.replyWithMarkdown(context, noteName)
 		return false
 	}
 })
