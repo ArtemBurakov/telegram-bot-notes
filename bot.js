@@ -11,6 +11,21 @@ const ACTIVE_STATUS = 10
 const DONE_STATUS = 20
 
 
+//----------------------------------------------- User -----------------------------------------------
+
+// Get User
+const getUser = async (context) => {
+	const user_id = context.session.selectedHometask.user_id
+	try {
+		const result = await userModel.findOne({user_id})
+		return result
+	} catch (error) {
+		console.log(error)
+	}
+}
+//----------------------------------------------------------------------------------------------------
+
+
 //----------------------------------------------- Note -----------------------------------------------
 
 // New note
@@ -115,7 +130,7 @@ const noteView = async (context) => {
 		if (date) {
 			note_view = `📒 ${note_name}\n\n 📎 ${note_text}\n\n 💣 Time left:${date.day}${date.hour}${date.minute}${date.seconds}\n`
 		} else {
-			note_view = `📒 ${note_name}\n\n 📎 ${note_text}\n\n ❌ Your note is missing!\n`
+			note_view = `📕 ${note_name}\n\n 📎 ${note_text}\n\n 😬 Your note is missing!\n`
 		}
 	} else {
 		note_view = `📒 ${note_name}\n\n 📎 ${note_text}\n`
@@ -238,17 +253,18 @@ const hometaskView = async (context) => {
 	const hometask_name = context.session.selectedHometask.name
 	const hometask_text = context.session.selectedHometask.text
 	const deadline_at = context.session.selectedHometask.deadline_at
+	const user = await getUser(context)
 
 	if (deadline_at) {
 		const date = await convertMS(deadline_at*1000)
 
 		if (date) {
-			hometask_view = `📒 ${hometask_name}\n\n 📎 ${hometask_text}\n\n 💣 Time left:${date.day}${date.hour}${date.minute}${date.seconds}\n`
+			hometask_view = `📒 ${hometask_name}\n\n 📎 ${hometask_text}\n\n 👤 Created by: ${user.first_name}\n 💣 Time left:${date.day}${date.hour}${date.minute}${date.seconds}\n`
 		} else {
-			hometask_view = `📒 ${hometask_name}\n\n 📎 ${hometask_text}\n\n ❌ Your hometask is missing!\n`
+			hometask_view = `📕 ${hometask_name}\n\n 📎 ${hometask_text}\n\n 👤 Created by: ${user.first_name}\n 🪖🧳 Your hometask is missing!\n`
 		}
 	} else {
-		hometask_view = `📒 ${hometask_name}\n\n 📎 ${hometask_text}\n`
+		hometask_view = `📒 ${hometask_name}\n\n 📎 ${hometask_text}\n\n 👤 Created by: ${user.first_name}\n`
 	}
 
 	return hometask_view
