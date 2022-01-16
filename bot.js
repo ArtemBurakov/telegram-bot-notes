@@ -273,17 +273,26 @@ const hometaskView = async (context) => {
 	const hometask_text = context.session.selectedHometask.text
 	const deadline_at = context.session.selectedHometask.deadline_at
 	const user = await getUser(context.session.selectedHometask.user_id)
+	const recentlyAdded = await isRecentlyAdded(context)
 
 	if (deadline_at) {
 		const date = await convertMS(deadline_at*1000)
 
 		if (date) {
-			hometask_view = `📒 ${hometask_name}\n\n 📎 ${hometask_text}\n\n 👤 Created by: ${user.first_name}\n 💣 Time left:${date.day}${date.hour}${date.minute}${date.seconds}\n`
+			if (recentlyAdded) {
+				hometask_view = `🔥 New hometask\n\n 📒 ${hometask_name}\n\n 📎 ${hometask_text}\n\n 👤 Created by: ${user.first_name}\n 💣 Time left:${date.day}${date.hour}${date.minute}${date.seconds}\n`
+			} else {
+				hometask_view = `📒 ${hometask_name}\n\n 📎 ${hometask_text}\n\n 👤 Created by: ${user.first_name}\n 💣 Time left:${date.day}${date.hour}${date.minute}${date.seconds}\n`
+			}
 		} else {
 			hometask_view = `📕 ${hometask_name}\n\n 📎 ${hometask_text}\n\n 👤 Created by: ${user.first_name}\n 🪖🧳 Your hometask is missing!\n`
 		}
 	} else {
-		hometask_view = `📒 ${hometask_name}\n\n 📎 ${hometask_text}\n\n 👤 Created by: ${user.first_name}\n`
+		if (recentlyAdded) {
+			hometask_view = `🔥 New hometask\n\n 📒 ${hometask_name}\n\n 📎 ${hometask_text}\n\n 👤 Created by: ${user.first_name}\n`
+		} else {
+			hometask_view = `📒 ${hometask_name}\n\n 📎 ${hometask_text}\n\n 👤 Created by: ${user.first_name}\n`
+		}
 	}
 
 	return hometask_view
@@ -310,7 +319,22 @@ const menuBodyHometask = async (context) => {
 
 
 
-//Conver timestamp in human readable date
+// Is recently added
+const isRecentlyAdded = async (context) => {
+	const date = Date.now();
+	const millisecondsInHour = 3600000
+	const numberOfHours = 8
+	const new_hometask_status_duration = millisecondsInHour * numberOfHours
+	const created_at = (context.session.selectedHometask.created_at)*1000
+
+	const createdDifference = date - created_at
+	if (createdDifference <= new_hometask_status_duration)
+		return true
+
+	return false
+}
+
+// Conver timestamp in human readable date
 const convertMS = async (deadline) => {
 	let date = Date.now();
 
@@ -318,7 +342,7 @@ const convertMS = async (deadline) => {
 
 	if (milliseconds < 0) return false;
 
-	let day, hour, minute, seconds, inTime;
+	let day, hour, minute, seconds;
 	seconds = Math.floor(milliseconds / 1000);
 	minute = Math.floor(seconds / 60);
 	seconds = seconds % 60;
