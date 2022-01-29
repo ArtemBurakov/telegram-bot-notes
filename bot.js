@@ -13,24 +13,6 @@ const DONE_STATUS = 20
 
 //----------------------------------------------- User -----------------------------------------------
 
-// Create User
-const createUser = async (ctx) => {
-	const username = ctx.message.from.username
-	const first_name = ctx.message.from.first_name
-	const user_id = ctx.message.from.id
-
-	if (await getUser(user_id))
-		return
-
-	try {
-		await userModel.create(!username ? null : username, first_name, user_id)
-	} catch (error) {
-		console.error('User already exist');
-	}
-
-	await isAdmin(ctx)
-}
-
 // Is User admin
 const isAdmin = async (ctx) => {
 	const user_id = ctx.message.from.id
@@ -45,6 +27,25 @@ const getUser = async (user_id) => {
 		return result
 	} catch (error) {
 		console.log(error)
+	}
+}
+
+// Create User
+const createUser = async (ctx) => {
+	const username = ctx.message.from.username
+	const first_name = ctx.message.from.first_name
+	const user_id = ctx.message.from.id
+
+	if (await getUser(user_id)) {
+		await isAdmin(ctx)
+		return
+	}
+
+	try {
+		await userModel.create(!username ? null : username, first_name, user_id)
+		await isAdmin(ctx)
+	} catch (error) {
+		console.error('User already exist');
 	}
 }
 //----------------------------------------------------------------------------------------------------
