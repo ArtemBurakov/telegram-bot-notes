@@ -19,11 +19,16 @@ const createUser = async (ctx) => {
 	const first_name = ctx.message.from.first_name
 	const user_id = ctx.message.from.id
 
+	if (await getUser(user_id))
+		return
+
 	try {
 		await userModel.create(!username ? null : username, first_name, user_id)
 	} catch (error) {
 		console.error('User already exist');
 	}
+
+	await isAdmin(ctx)
 }
 
 // Is User admin
@@ -706,7 +711,6 @@ bot.catch(error => {
 bot.command('start', async ctx => {
 	menuMiddleware.replyToContext(ctx)
 	await createUser(ctx)
-	await isAdmin(ctx)
 })
 
 async function startup() {
