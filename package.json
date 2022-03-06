@@ -5,6 +5,7 @@
   "dependencies": {
     "@grammyjs/menu": "^1.0.4",
     "@grammyjs/stateless-question": "^3.0.1",
+    "crypto-js": "^4.1.1",
     "dotenv": "^10.0.0",
     "grammy": "^1.6.1",
     "grammy-inline-menu": "^7.0.2",

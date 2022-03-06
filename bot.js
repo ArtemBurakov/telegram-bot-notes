@@ -1,6 +1,7 @@
 const { Bot, session } = require('grammy')
 const { MenuTemplate, MenuMiddleware, createBackMainMenuButtons } = require('grammy-inline-menu')
 const { StatelessQuestion } = require('@grammyjs/stateless-question')
+const CryptoJS = require("crypto-js")
 const userModel = require('./src/models/user.model')
 const hometaskModel = require('./src/models/hometask.model')
 const noteModel = require('./src/models/note.model')
@@ -77,8 +78,8 @@ const checkUser = async (ctx) => {
 // New note
 const newNote = async (context) => {
 	const user_id = context.from.id
-	const name = context.session.note_name
-	const text = context.session.note_text
+	const name = CryptoJS.AES.encrypt(context.session.note_name, process.env.SECRET_TOKEN).toString()
+	const text = CryptoJS.AES.encrypt(context.session.note_text, process.env.SECRET_TOKEN).toString()
 	const deadline_at = await timestampToMilliseconds(context.session.note_time)
 
 	try {
@@ -114,11 +115,13 @@ const updateNote = async (context) => {
 	try {
 		switch (context.session.note_update_type) {
 			case 'name':
-				await noteModel.update({name: context.message.text}, id, user_id)
+				const name = CryptoJS.AES.encrypt(context.message.text, process.env.SECRET_TOKEN).toString()
+				await noteModel.update({name: name}, id, user_id)
 				break
 
 			case 'text':
-				await noteModel.update({text: context.message.text}, id, user_id)
+				const text = CryptoJS.AES.encrypt(context.message.text, process.env.SECRET_TOKEN).toString()
+				await noteModel.update({text: text}, id, user_id)
 				break
 
 			case 'time':
@@ -166,8 +169,8 @@ const getNotesName = async (context) => {
 // Note view
 const noteView = async (context) => {
 	let note_view = ``
-	const note_name = context.session.selectedNote.name
-	const note_text = context.session.selectedNote.text
+	const note_name = CryptoJS.AES.decrypt(context.session.selectedNote.name, process.env.SECRET_TOKEN).toString(CryptoJS.enc.Utf8)
+	const note_text = CryptoJS.AES.decrypt(context.session.selectedNote.text, process.env.SECRET_TOKEN).toString(CryptoJS.enc.Utf8)
 	const deadline_at = context.session.selectedNote.deadline_at
 
 	if (deadline_at) {
@@ -211,8 +214,8 @@ const menuBodyNotes = async (context) => {
 // New hometask
 const newHometask = async (context) => {
 	const user_id = context.from.id
-	const name = context.session.hometask_name
-	const text = context.session.hometask_text
+	const name = CryptoJS.AES.encrypt(context.session.hometask_name, process.env.SECRET_TOKEN).toString()
+	const text = CryptoJS.AES.encrypt(context.session.hometask_text, process.env.SECRET_TOKEN).toString()
 	const deadline_at = await timestampToMilliseconds(context.session.hometask_time)
 
 	try {
@@ -246,11 +249,13 @@ const updateHometask = async (context) => {
 	try {
 		switch (context.session.hometask_update_type) {
 			case 'name':
-				await hometaskModel.update({name: context.message.text}, id)
+				const name = CryptoJS.AES.encrypt(context.message.text, process.env.SECRET_TOKEN).toString()
+				await hometaskModel.update({name: name}, id)
 				break
 
 			case 'text':
-				await hometaskModel.update({text: context.message.text}, id)
+				const text = CryptoJS.AES.encrypt(context.message.text, process.env.SECRET_TOKEN).toString()
+				await hometaskModel.update({text: text}, id)
 				break
 
 			case 'time':
@@ -296,8 +301,8 @@ const getHometasksName = async (context) => {
 // Hometask view
 const hometaskView = async (context) => {
 	let hometask_view = ``
-	const hometask_name = context.session.selectedHometask.name
-	const hometask_text = context.session.selectedHometask.text
+	const hometask_name = CryptoJS.AES.decrypt(context.session.selectedHometask.name, process.env.SECRET_TOKEN).toString(CryptoJS.enc.Utf8)
+	const hometask_text = CryptoJS.AES.decrypt(context.session.selectedHometask.text, process.env.SECRET_TOKEN).toString(CryptoJS.enc.Utf8)
 	const deadline_at = context.session.selectedHometask.deadline_at
 	const user = await getUser(context.session.selectedHometask.user_id)
 	const recentlyAdded = await isRecentlyAdded(context)
@@ -541,7 +546,7 @@ notesMenu.chooseIntoSubmenu('note', (context) => getNotesName(context), detailsN
 	  context.session.page_note = page
 	}
 })
-notesMenu.interact('🪄 Add a new note', 'new_note', {
+notesMenu.interact('🆕 Add a new note', 'new_note', {
 	do: async (context) => {
 		const noteName = 'OK. Send me the name for your note.'
 		await newNoteNameHandler.replyWithMarkdown(context, noteName)
@@ -668,7 +673,7 @@ hometaskMenu.chooseIntoSubmenu('hometask', (context) => getHometasksName(context
 	  context.session.page_hometask = page
 	}
 })
-hometaskMenu.interact('🪄 Add a new hometask', 'new_hometask', {
+hometaskMenu.interact('🆕 Add a new hometask', 'new_hometask', {
 	hide: ctx => ctx.session.isAdmin,
 	do: async (context) => {
 		const hometaskName = 'OK. Send me the name for your hometask.'
