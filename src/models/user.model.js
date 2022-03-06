@@ -25,11 +25,11 @@ class UserModel {
         return result;
     }
 
-    create = async (username, first_name, user_id) => {
+    create = async (first_name, user_id) => {
         const sql = `INSERT INTO ${this.tableName}
-        (username, first_name, user_id, role) VALUES (?,?,?,?)`;
+        (first_name, user_id, role) VALUES (?,?,?)`;
 
-        const result = await query(sql, [username, first_name, user_id, Role.SuperUser]);
+        const result = await query(sql, [first_name, user_id, Role.SuperUser]);
         const affectedRows = result ? result.affectedRows : 0;
 
         return affectedRows;

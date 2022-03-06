@@ -7,7 +7,6 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE IF NOT EXISTS users
   (
      id           INT PRIMARY KEY auto_increment,
-     username     VARCHAR(100),
      first_name   VARCHAR(100),
      user_id      INT UNIQUE NOT NULL,
      role         ENUM('Admin', 'SuperUser') DEFAULT 'SuperUser'

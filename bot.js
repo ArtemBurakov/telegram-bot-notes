@@ -10,15 +10,30 @@ const DELETED_STATUS = 0
 const ACTIVE_STATUS = 10
 const DONE_STATUS = 20
 
+const initial = () => {
+	return {
+		isUserExist: false,
+		isAdmin: true,
+		selectedNote: null,
+		selectedHometask: null,
+		page_hometask: null,
+		page_note: null,
+		notes_length: null,
+		hometasks_length: null,
+		note_update_type: null,
+		hometask_update_type: null,
+		note_name: null,
+		note_text: null,
+		note_time: null,
+		note_status: null,
+		hometask_name: null,
+		hometask_text: null,
+		hometask_time: null,
+		hometask_status: null
+	};
+}
 
 //----------------------------------------------- User -----------------------------------------------
-
-// Is User admin
-const isAdmin = async (ctx) => {
-	const user_id = ctx.message.from.id
-	const user = await getUser(user_id)
-	user.role == 'Admin' ? ctx.session.isAdmin = false : ctx.session.isAdmin = true
-}
 
 // Get User
 const getUser = async (user_id) => {
@@ -31,22 +46,28 @@ const getUser = async (user_id) => {
 }
 
 // Create User
-const createUser = async (ctx) => {
-	const username = ctx.message.from.username
-	const first_name = ctx.message.from.first_name
-	const user_id = ctx.message.from.id
+const createUser = async (first_name, user_id) => {
+	try {
+		await userModel.create(first_name, user_id)
+	} catch (error) {
+		console.error('Error createUser ->');
+	}
+}
 
-	if (await getUser(user_id)) {
-		await isAdmin(ctx)
+// Check if User exist
+const checkUser = async (ctx) => {
+	const first_name = ctx.update.callback_query.from.first_name
+	const user_id = ctx.update.callback_query.from.id
+
+	const user = await getUser(user_id)
+
+	if (user) {
+		user.role == 'Admin' ? ctx.session.isAdmin = false : ctx.session.isAdmin = true
 		return
 	}
 
-	try {
-		await userModel.create(!username ? null : username, first_name, user_id)
-		await isAdmin(ctx)
-	} catch (error) {
-		console.error('User already exist');
-	}
+	ctx.session.isAdmin = true
+	await createUser(first_name, user_id)
 }
 //----------------------------------------------------------------------------------------------------
 
@@ -647,7 +668,6 @@ hometaskMenu.chooseIntoSubmenu('hometask', (context) => getHometasksName(context
 	  context.session.page_hometask = page
 	}
 })
-hometaskMenu.navigate('🔄 Update hometask', '/hometasks/')
 hometaskMenu.interact('🪄 Add a new hometask', 'new_hometask', {
 	hide: ctx => ctx.session.isAdmin,
 	do: async (context) => {
@@ -656,9 +676,10 @@ hometaskMenu.interact('🪄 Add a new hometask', 'new_hometask', {
 		return false
 	}
 })
+hometaskMenu.navigate('🔄 Update hometask', '/hometasks/')
 hometaskMenu.manualRow(createBackMainMenuButtons())
 // Set Hometask menu as submenu in MainMenu
-mainMenu.submenu('📚 Your hometask [beta]', 'hometasks', hometaskMenu)
+mainMenu.submenu('📚 Your hometask', 'hometasks', hometaskMenu)
 //------------------------------------------------------------------------------------------------------------------//
 
 
@@ -667,34 +688,13 @@ const menuMiddleware = new MenuMiddleware('/', mainMenu)
 console.log(menuMiddleware.tree())
 
 const bot = new Bot(process.env.TELEGRAM_TOKEN)
+bot.use(session({ initial }));
 
 bot.on('callback_query:data', async (ctx, next) => {
-	console.log('another callbackQuery happened', ctx.callbackQuery.data.length, ctx.callbackQuery.data)
+	console.log('callbackQuery happened', ctx.callbackQuery.data.length, ctx.callbackQuery.data)
+	await checkUser(ctx)
 	return next()
 })
-
-const initial = () => {
-	return {
-		isAdmin: true,
-		selectedNote: null,
-		selectedHometask: null,
-		page_hometask: null,
-		page_note: null,
-		notes_length: null,
-		hometasks_length: null,
-		note_update_type: null,
-		hometask_update_type: null,
-		note_name: null,
-		note_text: null,
-		note_time: null,
-		note_status: null,
-		hometask_name: null,
-		hometask_text: null,
-		hometask_time: null,
-		hometask_status: null
-	};
-}
-bot.use(session({ initial }));
 
 bot.use(menuMiddleware.middleware())
 bot.use(newNoteUpdateHandler.middleware())
@@ -712,7 +712,6 @@ bot.catch(error => {
 
 bot.command('start', async ctx => {
 	menuMiddleware.replyToContext(ctx)
-	await createUser(ctx)
 })
 
 async function startup() {
