@@ -647,6 +647,7 @@ hometaskMenu.chooseIntoSubmenu('hometask', (context) => getHometasksName(context
 	  context.session.page_hometask = page
 	}
 })
+hometaskMenu.navigate('🔄 Update hometask', '/hometasks/')
 hometaskMenu.interact('🪄 Add a new hometask', 'new_hometask', {
 	hide: ctx => ctx.session.isAdmin,
 	do: async (context) => {

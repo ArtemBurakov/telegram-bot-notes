@@ -29,7 +29,7 @@ class HomeTaskModel {
     find = async (status) => {
         //console.log('DATABASE `hometask model` find')
 
-        const sql = `SELECT * FROM ${this.tableName} WHERE status = ? ORDER BY updated_at DESC`;
+        const sql = `SELECT * FROM ${this.tableName} WHERE status = ? ORDER BY created_at DESC`;
 
         const result = await query(sql, [status]);
 
