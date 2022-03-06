@@ -18,8 +18,8 @@ CREATE TABLE IF NOT EXISTS hometasks
   (
      id           INT PRIMARY KEY auto_increment,
      user_id      INT NOT NULL,
-     name         VARCHAR(100) NOT NULL,
-     text         VARCHAR(255) NOT NULL,
+     name         LONGTEXT NOT NULL,
+     text         LONGTEXT NOT NULL,
      status       INT NOT NULL DEFAULT 10,
      priority     INT NOT NULL DEFAULT 10,
      created_at   INT NOT NULL,
@@ -33,8 +33,8 @@ CREATE TABLE IF NOT EXISTS notes
   (
      id           INT PRIMARY KEY auto_increment,
      user_id      INT NOT NULL,
-     name         VARCHAR(100) NOT NULL,
-     text         VARCHAR(255) NOT NULL,
+     name         LONGTEXT NOT NULL,
+     text         LONGTEXT NOT NULL,
      status       INT NOT NULL DEFAULT 10,
      priority     INT NOT NULL DEFAULT 10,
      created_at   INT NOT NULL,
