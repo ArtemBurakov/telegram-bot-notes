@@ -1,0 +1,83 @@
+error_message: 'Something has gone wrong.'
+new: '🔥 New hometask'
+time_left: '💣 Time left:'
+created_by: '👤 Created by:'
+missing: '❌ Your hometask is missing!'
+view: '👀 View'
+days: 'days'
+hours: 'hours'
+minutes: 'minutes'
+seconds: 'seconds'
+
+
+# ------------------------------- Menu ----------------------------------
+main_menu: 'Main Menu'
+private_notes: '🔐 Private Notes'
+hometask: '📚 Your hometask'
+# -----------------------------------------------------------------------
+
+
+#---------------------------------- Notes ----------------------------------
+empty_notes_list: 'Currently you do not have notes. Try to add a new one.'
+
+note_is_missing: '😬 Your note is missing!'
+
+new_note: '🆕 Add a new note'
+new_note_alert: 'New note added successful!'
+note_name: 'OK. Send me the name for your note.'
+note_text: 'OK. Send me the text for your note.'
+note_date: 'OK. Send me the time (deadline time / due to) for your note. You have two options: the first is to specify the date for example: \`2022-01-10 14:45\` (the time need to be in \`24 hours format\`), the second does not specify the time, ie write \`0\` and your note will be without the attached time.'
+
+
+note_done: '✅ Done'
+
+
+note_update: '✏️ Update'
+note_update_alert: 'Note updated!'
+note_update_name: '📒 Update note name'
+note_update_text: '📎 Update note text'
+note_update_date: '⏰ Update note time'
+note_new_name: 'OK. Send me the new name for your note.'
+note_new_text: 'OK. Send me the new text for your note.'
+note_new_date: 'OK. Send me the new time (deadline time / due to) for your note. You have two options: the first is to specify the date for example: \`2022-01-10 14:45\` (the time need to be in \`24 hours format\`), the second does not specify the time, ie write \`0\` and your note will be without the attached time.'
+
+
+note_delete: '🗑 Delete'
+delete_note_alert: 'Note deleted!'
+delete_note: 'You are about to delete your note. Is that correct?'
+delete_note_yes: '✅ Yes, delete the note'
+delete_note_no: '❌ Nope, nevermind'
+#--------------------------------------------------------------------
+
+
+#---------------------------------- Hometask ----------------------------------
+empty_hometask_list: 'Currently you do not have hometask. Try to add a new one.'
+
+update_hometask: '🔄 Update hometask'
+
+new_hometask: '🆕 Add a new hometask'
+new_hometask_alert: 'New hometask added successful!'
+hometask_name: 'OK. Send me the name for your hometask.'
+hometask_text: 'OK. Send me the text for your hometask.'
+hometask_date: 'OK. Send me the time (deadline time / due to) for your hometask. You have two options: the first is to specify the date for example: \`2022-01-10 14:45\` (the time need to be in \`24 hours format\`), the second does not specify the time, ie write \`0\` and your hometask will be without the attached time.'
+
+
+hometask_done: '✅ Done'
+
+
+hometask_update: '✏️ Update'
+hometask_update_alert: 'Hometask updated!'
+hometask_update_name: '📒 Update hometask name'
+hometask_update_text: '📎 Update hometask text'
+hometask_update_date: '⏰ Update hometask time'
+hometask_new_name: 'OK. Send me the new name for your hometask.'
+hometask_new_text: 'OK. Send me the new text for your hometask.'
+hometask_new_date: 'OK. Send me the new time (deadline time / due to) for your hometask. You have two options: the first is to specify the date for example: \`2022-01-10 14:45\` (the time need to be in \`24 hours format\`), the second does not specify the time, ie write \`0\` and your hometask will be without the attached time.'
+
+
+hometask_delete: '🗑 Delete'
+delete_hometask_alert: 'Hometask deleted!'
+delete_hometask: 'You are about to delete your hometask. Is that correct?'
+delete_hometask_yes: '✅ Yes, delete the hometask'
+delete_hometask_no: '❌ Nope, nevermind'
+#--------------------------------------------------------------------

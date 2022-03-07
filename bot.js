@@ -1,6 +1,7 @@
 const { Bot, session } = require('grammy')
 const { MenuTemplate, MenuMiddleware, createBackMainMenuButtons } = require('grammy-inline-menu')
 const { StatelessQuestion } = require('@grammyjs/stateless-question')
+const { I18n } = require('@grammyjs/i18n');
 const CryptoJS = require("crypto-js")
 const userModel = require('./src/models/user.model')
 const hometaskModel = require('./src/models/hometask.model')
@@ -10,6 +11,12 @@ require('dotenv').config()
 const DELETED_STATUS = 0
 const ACTIVE_STATUS = 10
 const DONE_STATUS = 20
+
+const i18n = new I18n({
+	defaultLanguageOnMissing: true,
+	directory: "locales",
+	useSession: true,
+})
 
 const initial = () => {
 	return {
@@ -85,10 +92,10 @@ const newNote = async (context) => {
 	try {
 		await noteModel.create(user_id, name, text, deadline_at)
 		context.session.page = null
-		await context.reply('New note added successful!')
+		await context.reply(context.i18n.t('new_note_alert'))
 	} catch (error) {
 		console.log(error)
-		await context.reply('Something has gone wrong.')
+		await context.reply(context.i18n.t('error_message'))
 	}
 }
 
@@ -100,10 +107,10 @@ const deleteNote = async (context) => {
 	try {
 		await noteModel.update({status: DELETED_STATUS}, id, user_id)
 		context.session.page = null
-		await context.reply('Note deleted!')
+		await context.reply(context.i18n.t('delete_note_alert'))
 	} catch (error) {
 		console.log(error)
-		await context.reply('Something has gone wrong.')
+		await context.reply(context.i18n.t('error_message'))
 	}
 }
 
@@ -134,10 +141,10 @@ const updateNote = async (context) => {
 				context.session.page = null
 				break
 		}
-		await context.reply('Note updated!')
+		await context.reply(context.i18n.t('note_update_alert'))
 	} catch (error) {
 		console.log(error)
-		await context.reply('Something has gone wrong.')
+		await context.reply(context.i18n.t('error_message'))
 	}
 }
 
@@ -158,7 +165,7 @@ const getNotesName = async (context) => {
 	try {
 		let notesArray = []
 		if (context.session.notes_length)
-			notesArray = Array(context.session.notes_length).fill('👀 View')
+			notesArray = Array(context.session.notes_length).fill(context.i18n.t('view'))
 
 		return notesArray
 	} catch (error) {
@@ -174,23 +181,23 @@ const noteView = async (context) => {
 	const deadline_at = context.session.selectedNote.deadline_at
 
 	if (deadline_at) {
-		const date = await convertMS(deadline_at*1000)
+		const date = await convertMS(deadline_at*1000, context)
 
 		if (date) {
-			note_view = `📒 ${note_name}\n\n 📎 ${note_text}\n\n 💣 Time left:${date.day}${date.hour}${date.minute}${date.seconds}\n`
+			note_view = `📒 *${note_name}*\n\n 📎 _${note_text}_\n\n ${context.i18n.t('time_left')}${date.day}${date.hour}${date.minute}${date.seconds}\n`
 		} else {
-			note_view = `📕 ${note_name}\n\n 📎 ${note_text}\n\n 😬 Your note is missing!\n`
+			note_view = `📕 *${note_name}*\n\n 📎 _${note_text}_\n\n ${context.i18n.t('note_is_missing')}\n`
 		}
 	} else {
-		note_view = `📒 ${note_name}\n\n 📎 ${note_text}\n`
+		note_view = `📒 *${note_name}*\n\n 📎 _${note_text}_\n`
 	}
 
-	return note_view
+	return {text: note_view, parse_mode: 'Markdown'}
 }
 
 // Menu body notes
 const menuBodyNotes = async (context) => {
-	const emptyTextNotes = 'Currently you do not have notes. Try to add a new one.'
+	const emptyTextNotes = context.i18n.t('empty_notes_list')
 
 	const result = await getNotes(context)
 	if (!result.length) {
@@ -200,7 +207,12 @@ const menuBodyNotes = async (context) => {
 
 	const pageIndex = (context.session.page_note ?? 1) - 1
 	const currentPageEntries = result.slice(pageIndex * ENTRIES_PER_PAGE_NOTE, (pageIndex + ENTRIES_PER_PAGE_NOTE) * 1)
-	context.session.selectedNote = currentPageEntries[0]
+
+	if (currentPageEntries[0])
+		context.session.selectedNote = currentPageEntries[0]
+	else
+		context.session.selectedNote = result[0]
+
 	context.session.notes_length = result.length
 
 	return await noteView(context)
@@ -221,10 +233,10 @@ const newHometask = async (context) => {
 	try {
 		await hometaskModel.create(user_id, name, text, deadline_at)
 		context.session.page = null
-		await context.reply('New hometask added successful!')
+		await context.reply(context.i18n.t('new_hometask_alert'))
 	} catch (error) {
 		console.log(error)
-		await context.reply('Something has gone wrong.')
+		await context.reply(context.i18n.t('error_message'))
 	}
 }
 
@@ -235,10 +247,10 @@ const deleteHometask = async (context) => {
 	try {
 		await hometaskModel.update({status: DELETED_STATUS}, id)
 		context.session.page = null
-		await context.reply('Hometask deleted!')
+		await context.reply(context.i18n.t('delete_hometask_alert'))
 	} catch (error) {
 		console.log(error)
-		await context.reply('Something has gone wrong.')
+		await context.reply(context.i18n.t('error_message'))
 	}
 }
 
@@ -268,10 +280,10 @@ const updateHometask = async (context) => {
 				context.session.page = null
 				break
 		}
-		await context.reply('Hometask updated!')
+		await context.reply(context.i18n.t('hometask_update_alert'))
 	} catch (error) {
 		console.log(error)
-		await context.reply('Something has gone wrong.')
+		await context.reply(context.i18n.t('error_message'))
 	}
 }
 
@@ -290,7 +302,7 @@ const getHometasksName = async (context) => {
 	try {
 		let hometasksArray = []
 		if (context.session.hometasks_length)
-			hometasksArray = Array(context.session.hometasks_length).fill('👀 View hometask')
+			hometasksArray = Array(context.session.hometasks_length).fill(context.i18n.t('view'))
 
 		return hometasksArray
 	} catch (error) {
@@ -308,31 +320,31 @@ const hometaskView = async (context) => {
 	const recentlyAdded = await isRecentlyAdded(context)
 
 	if (deadline_at) {
-		const date = await convertMS(deadline_at*1000)
+		const date = await convertMS(deadline_at*1000, context)
 
 		if (date) {
 			if (recentlyAdded) {
-				hometask_view = `🔥 New hometask\n\n 📒 ${hometask_name}\n\n 📎 ${hometask_text}\n\n 👤 Created by: ${user.first_name}\n 💣 Time left:${date.day}${date.hour}${date.minute}${date.seconds}\n`
+				hometask_view = `${context.i18n.t('new')}\n\n 📒 *${hometask_name}*\n\n 📎 _${hometask_text}_\n\n ${context.i18n.t('created_by')} ${user.first_name}\n ${context.i18n.t('time_left')}${date.day}${date.hour}${date.minute}${date.seconds}\n`
 			} else {
-				hometask_view = `📒 ${hometask_name}\n\n 📎 ${hometask_text}\n\n 👤 Created by: ${user.first_name}\n 💣 Time left:${date.day}${date.hour}${date.minute}${date.seconds}\n`
+				hometask_view = `📒 *${hometask_name}*\n\n 📎 _${hometask_text}_\n\n ${context.i18n.t('created_by')} ${user.first_name}\n ${context.i18n.t('time_left')}${date.day}${date.hour}${date.minute}${date.seconds}\n`
 			}
 		} else {
-			hometask_view = `📕 ${hometask_name}\n\n 📎 ${hometask_text}\n\n 👤 Created by: ${user.first_name}\n 🪖🧳 Your hometask is missing!\n`
+			hometask_view = `📕 *${hometask_name}*\n\n 📎 _${hometask_text}_\n\n ${context.i18n.t('created_by')} ${user.first_name}\n ${context.i18n.t('missing')}\n`
 		}
 	} else {
 		if (recentlyAdded) {
-			hometask_view = `🔥 New hometask\n\n 📒 ${hometask_name}\n\n 📎 ${hometask_text}\n\n 👤 Created by: ${user.first_name}\n`
+			hometask_view = `${context.i18n.t('new')}\n\n 📒 *${hometask_name}*\n\n 📎 _${hometask_text}_\n\n ${context.i18n.t('created_by')} ${user.first_name}\n`
 		} else {
-			hometask_view = `📒 ${hometask_name}\n\n 📎 ${hometask_text}\n\n 👤 Created by: ${user.first_name}\n`
+			hometask_view = `📒 *${hometask_name}*\n\n 📎 _${hometask_text}_\n\n ${context.i18n.t('created_by')} ${user.first_name}\n`
 		}
 	}
 
-	return hometask_view
+	return {text: hometask_view, parse_mode: 'Markdown'}
 }
 
 // Menu body hometask
 const menuBodyHometask = async (context) => {
-	const emptyTextSubject = 'Currently you do not have hometask. Try to add a new one.'
+	const emptyTextSubject = context.i18n.t('empty_hometask_list')
 
 	const result = await getHometask(context)
 	if (!result.length) {
@@ -342,7 +354,12 @@ const menuBodyHometask = async (context) => {
 
 	const pageIndex = (context.session.page_hometask ?? 1) - 1
 	const currentPageEntries = result.slice(pageIndex * ENTRIES_PER_PAGE_HOMETASK, (pageIndex + ENTRIES_PER_PAGE_HOMETASK) * 1)
-	context.session.selectedHometask = currentPageEntries[0]
+
+	if (currentPageEntries[0])
+		context.session.selectedHometask = currentPageEntries[0]
+	else
+		context.session.selectedHometask = result[0]
+
 	context.session.hometasks_length = result.length
 
 	return await hometaskView(context)
@@ -367,7 +384,7 @@ const isRecentlyAdded = async (context) => {
 }
 
 // Conver timestamp in human readable date
-const convertMS = async (deadline) => {
+const convertMS = async (deadline, context) => {
 	let date = Date.now();
 
 	let milliseconds = deadline - date;
@@ -385,7 +402,7 @@ const convertMS = async (deadline) => {
 
 	if (day >= 5) {
 	  return {
-		day: ` ${day} days`,
+		day: ` ${day} ${context.i18n.t('days')}`,
 		hour: '',
 		minute: '',
 		seconds: ''
@@ -394,8 +411,8 @@ const convertMS = async (deadline) => {
 
 	if (day <= 5 && day >= 1) {
 	  return {
-		day: ` ${day} days`,
-		hour: ` ${hour} hours`,
+		day: ` ${day} ${context.i18n.t('days')}`,
+		hour: ` ${hour} ${context.i18n.t('hours')}`,
 		minute: '',
 		seconds: ''
 	  }
@@ -404,8 +421,8 @@ const convertMS = async (deadline) => {
 	if (day <= 1 && hour >= 1) {
 	  return {
 		day: '',
-		hour: ` ${hour} hours`,
-		minute: minute == 0 ? '' : ` ${minute} minutes`,
+		hour: ` ${hour} ${context.i18n.t('hours')}`,
+		minute: minute == 0 ? '' : ` ${minute} ${context.i18n.t('minutes')}`,
 		seconds: ''
 	  }
 	}
@@ -414,8 +431,8 @@ const convertMS = async (deadline) => {
 	  return {
 		day: '',
 		hour: '',
-		minute: minute == 0 ? '' : ` ${minute} minutes`,
-		seconds: seconds == 0 ? '' :  ` ${seconds} seconds`
+		minute: minute == 0 ? '' : ` ${minute} ${context.i18n.t('minutes')}`,
+		seconds: seconds == 0 ? '' :  ` ${seconds} ${context.i18n.t('seconds')}`
 	  }
 	}
 }
@@ -433,23 +450,23 @@ const timestampToMilliseconds = async (timestamp) => {
 
 
 //-------------------- Main menu --------------------//
-const mainMenu = new MenuTemplate(() => 'Main Menu')
+const mainMenu = new MenuTemplate((ctx) => ctx.i18n.t('main_menu'))
 //---------------------------------------------------//
 
 
 
 //------------------------------------------------- Delete Note ----------------------------------------------//
-const deleteNoteMenu = new MenuTemplate('You are about to delete your note. Is that correct?')
-deleteNoteMenu.interact('✅ Yes, delete the note', 'yes', {
+const deleteNoteMenu = new MenuTemplate((ctx) => ctx.i18n.t('delete_note'))
+deleteNoteMenu.interact((ctx) => ctx.i18n.t('delete_note_yes'), 'yes', {
 	do: async (ctx) => {
 		await deleteNote(ctx)
 		await menuMiddleware.replyToContext(ctx, '/notes/')
 		return false
 	}
 })
-deleteNoteMenu.interact('❌ Nope, nevermind', 'no', {
+deleteNoteMenu.interact((ctx) => ctx.i18n.t('delete_note_no'), 'no', {
 	do: async (ctx) => {
-		await menuMiddleware.replyToContext(ctx, `/notes/note:👀 View/`)
+		await menuMiddleware.replyToContext(ctx, `/notes/note:${ctx.i18n.t('view')}/`)
 		return false
 	}
 })
@@ -461,30 +478,30 @@ deleteNoteMenu.manualRow(createBackMainMenuButtons())
 //------------------------------------------------- Update Note ----------------------------------------------//
 const newNoteUpdateHandler = new StatelessQuestion('update_note', async (context) => {
 	await updateNote(context)
-	await menuMiddleware.replyToContext(context, `/notes/note:👀 View/`)
+	await menuMiddleware.replyToContext(context, `/notes/note:${context.i18n.t('view')}/`)
 })
 
 const updateNoteMenu = new MenuTemplate(menuBodyNotes)
-updateNoteMenu.interact('📒 Update note name', 'note_name', {
+updateNoteMenu.interact((ctx) => ctx.i18n.t('note_update_name'), 'note_name', {
 	do: async (context) => {
 		context.session.note_update_type = 'name'
-		const noteName = 'OK. Send me the new name for your note.'
+		const noteName = context.i18n.t('note_new_name')
 		await newNoteUpdateHandler.replyWithMarkdown(context, noteName)
 		return false
 	}
 })
-updateNoteMenu.interact('📎 Update note text', 'note_text', {
+updateNoteMenu.interact((ctx) => ctx.i18n.t('note_update_text'), 'note_text', {
 	do: async (context) => {
 		context.session.note_update_type = 'text'
-		const noteText = 'OK. Send me the new text for your note.'
+		const noteText = context.i18n.t('note_new_text')
 		await newNoteUpdateHandler.replyWithMarkdown(context, noteText)
 		return false
 	}
 })
-updateNoteMenu.interact('⏰ Update note time', 'note_time', {
+updateNoteMenu.interact((ctx) => ctx.i18n.t('note_update_date'), 'note_time', {
 	do: async (context) => {
 		context.session.note_update_type = 'time'
-		const noteTime = 'OK. Send me the new time (also deadline time/due to) for your note. You have two options: the first is to specify the date for example: \`2022-01-10 14:45\` (the time need to be in \`24 hours format\`), the second does not specify the time, ie write \`0\` and your note will be without the attached time.'
+		const noteTime = context.i18n.t('note_new_date')
 		await newNoteUpdateHandler.replyWithMarkdown(context, noteTime)
 		return false
 	}
@@ -497,14 +514,14 @@ updateNoteMenu.manualRow(createBackMainMenuButtons())
 //------------------------------------------------- New Note -------------------------------------------------//
 const newNoteNameHandler = new StatelessQuestion('new_name', async (context) => {
 	context.session.note_name = context.message.text
-	const noteText = 'OK. Send me the text for your note.'
+	const noteText = context.i18n.t('note_text')
 	await newNoteTextHandler.replyWithMarkdown(context, noteText)
 	return false
 })
 
 const newNoteTextHandler = new StatelessQuestion('new_text', async (context) => {
 	context.session.note_text = context.message.text
-	const noteText = 'OK. Send me the time (also deadline time/due to) for your note. You have two options: the first is to specify the date for example: \`2022-01-10 14:45\` (the time need to be in \`24 hours format\`), the second does not specify the time, ie write \`0\` and your note will be without the attached time.'
+	const noteText = context.i18n.t('note_date')
 	await newNoteTimeHandler.replyWithMarkdown(context, noteText)
 	return false
 })
@@ -522,7 +539,7 @@ const newNoteTimeHandler = new StatelessQuestion('new_time', async (context) => 
 const ENTRIES_PER_PAGE_NOTE = 1
 
 const detailsNoteTemplate = new MenuTemplate(menuBodyNotes)
-detailsNoteTemplate.interact('✅ Done', 'done', {
+detailsNoteTemplate.interact((ctx) => ctx.i18n.t('note_done'), 'done', {
 	do: async ctx => {
 		ctx.session.note_update_type = 'status'
 		ctx.session.note_status = DONE_STATUS
@@ -531,8 +548,8 @@ detailsNoteTemplate.interact('✅ Done', 'done', {
 		return false
 	}
 })
-detailsNoteTemplate.submenu('✏️ Update', 'update', updateNoteMenu)
-detailsNoteTemplate.submenu('🗑 Delete', 'delete', deleteNoteMenu)
+detailsNoteTemplate.submenu((ctx) => ctx.i18n.t('note_update'), 'update', updateNoteMenu)
+detailsNoteTemplate.submenu((ctx) => ctx.i18n.t('note_delete'), 'delete', deleteNoteMenu)
 detailsNoteTemplate.manualRow(createBackMainMenuButtons())
 
 // Note menu
@@ -546,32 +563,32 @@ notesMenu.chooseIntoSubmenu('note', (context) => getNotesName(context), detailsN
 	  context.session.page_note = page
 	}
 })
-notesMenu.interact('🆕 Add a new note', 'new_note', {
+notesMenu.interact((ctx) => ctx.i18n.t('new_note'), 'new_note', {
 	do: async (context) => {
-		const noteName = 'OK. Send me the name for your note.'
+		const noteName = context.i18n.t('note_name')
 		await newNoteNameHandler.replyWithMarkdown(context, noteName)
 		return false
 	}
 })
 notesMenu.manualRow(createBackMainMenuButtons())
 // Set Notes menu as submenu in MainMenu
-mainMenu.submenu('🔐 Private Notes', 'notes', notesMenu)
+mainMenu.submenu((ctx) => ctx.i18n.t('private_notes'), 'notes', notesMenu)
 //------------------------------------------------------------------------------------------------------------//
 
 
 
 //------------------------------------------------- Delete Hometask ----------------------------------------------//
-const deleteHometaskMenu = new MenuTemplate('You are about to delete your hometask. Is that correct?')
-deleteHometaskMenu.interact('✅ Yes, delete the hometask', 'yes', {
+const deleteHometaskMenu = new MenuTemplate((ctx) => ctx.i18n.t('delete_hometask'))
+deleteHometaskMenu.interact((ctx) => ctx.i18n.t('delete_hometask_yes'), 'yes', {
 	do: async (ctx) => {
 		await deleteHometask(ctx)
 		await menuMiddleware.replyToContext(ctx, '/hometasks/')
 		return false
 	}
 })
-deleteHometaskMenu.interact('❌ Nope, nevermind', 'no', {
+deleteHometaskMenu.interact((ctx) => ctx.i18n.t('delete_hometask_no'), 'no', {
 	do: async (ctx) => {
-		await menuMiddleware.replyToContext(ctx, `/hometasks/hometask:👀 View hometask/`)
+		await menuMiddleware.replyToContext(ctx, `/hometasks/hometask:${ctx.i18n.t('view')}/`)
 		return false
 	}
 })
@@ -583,30 +600,30 @@ deleteHometaskMenu.manualRow(createBackMainMenuButtons())
 //------------------------------------------------- Update Hometask ----------------------------------------------//
 const newHometaskUpdateHandler = new StatelessQuestion('update_hometask', async (context) => {
 	await updateHometask(context)
-	await menuMiddleware.replyToContext(context, `/hometasks/hometask:👀 View hometask/`)
+	await menuMiddleware.replyToContext(context, `/hometasks/hometask:${context.i18n.t('view')}/`)
 })
 
 const updateHometaskMenu = new MenuTemplate(menuBodyHometask)
-updateHometaskMenu.interact('📒 Update hometask name', 'hometask_name', {
+updateHometaskMenu.interact((ctx) => ctx.i18n.t('hometask_update_name'), 'hometask_name', {
 	do: async (context) => {
 		context.session.hometask_update_type = 'name'
-		const hometaskName = 'OK. Send me the new name for your hometask.'
+		const hometaskName = context.i18n.t('hometask_new_name')
 		await newHometaskUpdateHandler.replyWithMarkdown(context, hometaskName)
 		return false
 	}
 })
-updateHometaskMenu.interact('📎 Update hometask text', 'hometask_text', {
+updateHometaskMenu.interact((ctx) => ctx.i18n.t('hometask_update_text'), 'hometask_text', {
 	do: async (context) => {
 		context.session.hometask_update_type = 'text'
-		const hometaskText = 'OK. Send me the new text for your hometask.'
+		const hometaskText = context.i18n.t('hometask_new_text')
 		await newHometaskUpdateHandler.replyWithMarkdown(context, hometaskText)
 		return false
 	}
 })
-updateHometaskMenu.interact('⏰ Update hometask time', 'hometask_time', {
+updateHometaskMenu.interact((ctx) => ctx.i18n.t('hometask_update_date'), 'hometask_time', {
 	do: async (context) => {
 		context.session.hometask_update_type = 'time'
-		const hometaskTime = 'OK. Send me the new time (also deadline time/due to) for your hometask. You have two options: the first is to specify the date for example: \`2022-01-10 14:45\` (the time need to be in \`24 hours format\`), the second does not specify the time, ie write \`0\` and your hometask will be without the attached time.'
+		const hometaskTime = context.i18n.t('hometask_new_date')
 		await newHometaskUpdateHandler.replyWithMarkdown(context, hometaskTime)
 		return false
 	}
@@ -619,14 +636,14 @@ updateHometaskMenu.manualRow(createBackMainMenuButtons())
 //------------------------------------------------- New Hometask -------------------------------------------------//
 const newHometaskNameHandler = new StatelessQuestion('new_name_hometask', async (context) => {
 	context.session.hometask_name = context.message.text
-	const hometaskText = 'OK. Send me the text for your hometask.'
+	const hometaskText = context.i18n.t('hometask_text')
 	await newHometaskTextHandler.replyWithMarkdown(context, hometaskText)
 	return false
 })
 
 const newHometaskTextHandler = new StatelessQuestion('new_text_hometask', async (context) => {
 	context.session.hometask_text = context.message.text
-	const hometaskText = 'OK. Send me the time (also deadline time/due to) for your hometask. You have two options: the first is to specify the date for example: \`2022-01-10 14:45\` (the time need to be in \`24 hours format\`), the second does not specify the time, ie write \`0\` and your hometask will be without the attached time.'
+	const hometaskText = context.i18n.t('hometask_date')
 	await newHometaskTimeHandler.replyWithMarkdown(context, hometaskText)
 	return false
 })
@@ -644,7 +661,7 @@ const newHometaskTimeHandler = new StatelessQuestion('new_time_hometask', async 
 const ENTRIES_PER_PAGE_HOMETASK = 1
 
 const detailsHometaskTemplate = new MenuTemplate(menuBodyHometask)
-detailsHometaskTemplate.interact('✅ Done', 'done', {
+detailsHometaskTemplate.interact((ctx) => ctx.i18n.t('hometask_done'), 'done', {
 	hide: ctx => ctx.session.isAdmin,
 	do: async ctx => {
 		ctx.session.hometask_update_type = 'status'
@@ -654,10 +671,10 @@ detailsHometaskTemplate.interact('✅ Done', 'done', {
 		return false
 	}
 })
-detailsHometaskTemplate.submenu('✏️ Update', 'update', updateHometaskMenu, {
+detailsHometaskTemplate.submenu((ctx) => ctx.i18n.t('hometask_update'), 'update', updateHometaskMenu, {
 	hide: ctx => ctx.session.isAdmin
 })
-detailsHometaskTemplate.submenu('🗑 Delete', 'delete', deleteHometaskMenu, {
+detailsHometaskTemplate.submenu((ctx) => ctx.i18n.t('hometask_delete'), 'delete', deleteHometaskMenu, {
 	hide: ctx => ctx.session.isAdmin
 })
 detailsHometaskTemplate.manualRow(createBackMainMenuButtons())
@@ -673,19 +690,56 @@ hometaskMenu.chooseIntoSubmenu('hometask', (context) => getHometasksName(context
 	  context.session.page_hometask = page
 	}
 })
-hometaskMenu.interact('🆕 Add a new hometask', 'new_hometask', {
+hometaskMenu.interact((ctx) => ctx.i18n.t('new_hometask'), 'new_hometask', {
 	hide: ctx => ctx.session.isAdmin,
 	do: async (context) => {
-		const hometaskName = 'OK. Send me the name for your hometask.'
+		const hometaskName = context.i18n.t('hometask_name')
 		await newHometaskNameHandler.replyWithMarkdown(context, hometaskName)
 		return false
 	}
 })
-hometaskMenu.navigate('🔄 Update hometask', '/hometasks/')
+hometaskMenu.navigate((ctx) => ctx.i18n.t('update_hometask'), '/hometasks/')
 hometaskMenu.manualRow(createBackMainMenuButtons())
 // Set Hometask menu as submenu in MainMenu
-mainMenu.submenu('📚 Your hometask', 'hometasks', hometaskMenu)
+mainMenu.submenu((ctx) => ctx.i18n.t('hometask'), 'hometasks', hometaskMenu)
 //------------------------------------------------------------------------------------------------------------------//
+
+
+
+//------------------------------------------------- Language ----------------------------------------------//
+mainMenu.select('language_row_1', ['🇬🇧 English', '🇺🇦 Українська'], {
+	isSet: (ctx, key) => ctx.session.choice === key,
+	set: (ctx, key) => {
+		ctx.session.choice = key
+
+		switch (key) {
+			case '🇬🇧 English':
+				ctx.i18n.locale('en')
+				break
+			case '🇺🇦 Українська':
+				ctx.i18n.locale('ua')
+				break
+		}
+		return true
+	}
+})
+mainMenu.select('language_row_2', ['🇪🇸 Spanish', '🇩🇪 Deutsch'], {
+	isSet: (ctx, key) => ctx.session.choice === key,
+	set: (ctx, key) => {
+		ctx.session.choice = key
+
+		switch (key) {
+			case '🇪🇸 Spanish':
+				ctx.i18n.locale('es')
+				break
+			case '🇩🇪 Deutsch':
+				ctx.i18n.locale('de')
+				break
+		}
+		return true
+	}
+})
+//---------------------------------------------------------------------------------------------------------//
 
 
 
@@ -693,7 +747,8 @@ const menuMiddleware = new MenuMiddleware('/', mainMenu)
 console.log(menuMiddleware.tree())
 
 const bot = new Bot(process.env.TELEGRAM_TOKEN)
-bot.use(session({ initial }));
+bot.use(session({ initial }))
+bot.use(i18n.middleware())
 
 bot.on('callback_query:data', async (ctx, next) => {
 	console.log('callbackQuery happened', ctx.callbackQuery.data.length, ctx.callbackQuery.data)

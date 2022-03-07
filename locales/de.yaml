@@ -1,0 +1,83 @@
+error_message: 'Etwas ist schief gelaufen.'
+new: '🔥 Neue Hausaufgabe'
+time_left: '💣 Verbleibende Zeit:'
+created_by: '👤 Erstellt von:'
+missing: '❌ Deine Hausaufgabe fehlt!'
+view: '👀 Ansicht'
+days: 'Tage'
+hours: 'Stunden'
+minutes: 'Minuten'
+seconds: 'Sekunden'
+
+
+# ------------------------------- Menü -----------------------------------
+main_menu: 'Hauptmenü'
+private_notes: '🔐 Private Notizen'
+hometask: '📚 Deine Hausaufgabe'
+# ------------------------------------------------------------------------
+
+
+#---------------------------------- Anmerkungen ----------------------------------
+empty_notes_list: 'Derzeit hast du keine Notizen. Versuchen Sie, einen neuen hinzuzufügen.'
+
+note_is_missing: '😬 Deine Notiz fehlt!'
+
+new_note: '🆕 Neue Notiz hinzufügen'
+new_note_alert: 'Neue Notiz erfolgreich hinzugefügt!'
+note_name: 'OK. Schicken Sie mir den Namen für Ihre Notiz.'
+note_text: 'OK. Schicken Sie mir den Text für Ihre Notiz.'
+note_date: 'OK. Senden Sie mir die Uhrzeit (Frist / fällig bis) für Ihre Notiz. Sie haben zwei Möglichkeiten: Die erste besteht darin, das Datum anzugeben, zum Beispiel: \`2022-01-10 14:45\` (die Zeit muss im \`24-Stunden-Format\` sein), die zweite gibt die Uhrzeit nicht an , dh schreiben Sie \`0\` und Ihre Notiz wird ohne die angehängte Zeit sein.'
+
+
+note_done: '✅ Fertig'
+
+
+note_update: '✏️ Aktualisieren'
+note_update_alert: 'Hinweis aktualisiert!'
+note_update_name: '📒 Notiznamen aktualisieren'
+note_update_text: '📎 Notiztext aktualisieren'
+note_update_date: '⏰ Notizzeit aktualisieren'
+note_new_name: 'OK. Schicken Sie mir den neuen Namen für Ihre Notiz.'
+note_new_text: 'OK. Schicken Sie mir den neuen Text für Ihre Notiz.'
+note_new_date: 'OK. Senden Sie mir die neue Uhrzeit (Frist / fällig bis) für Ihre Notiz. Sie haben zwei Möglichkeiten: Die erste besteht darin, das Datum anzugeben, zum Beispiel: \`2022-01-10 14:45\` (die Zeit muss im \`24-Stunden-Format\` sein), die zweite gibt die Uhrzeit nicht an , dh schreiben Sie \`0\` und Ihre Notiz wird ohne die angehängte Zeit sein.'
+
+
+note_delete: '🗑 Löschen'
+delete_note_alert: 'Notiz gelöscht!'
+delete_note: 'Du bist dabei, deine Notiz zu löschen. Ist das korrekt?'
+delete_note_yes: '✅ Ja, Notiz löschen'
+delete_note_no: '❌ Nein, egal'
+#---------------------------------------------------------------------------------
+
+
+#----------------------------------- Hausaufgabe ---------------------------------
+empty_hometask_list: 'Derzeit hast du keine Hometask. Versuchen Sie, einen neuen hinzuzufügen.'
+
+update_hometask: '🔄 Hometask aktualisieren'
+
+new_hometask: '🆕 Füge eine neue Hometask hinzu'
+new_hometask_alert: 'Neue Hometask erfolgreich hinzugefügt!'
+hometask_name: 'OK. Schicken Sie mir den Namen für Ihre Hausaufgabe.'
+hometask_text: 'OK. Schicken Sie mir den Text für Ihre Hausaufgabe.'
+hometask_date: 'OK. Senden Sie mir die Zeit (Frist / fällig bis) für Ihre Hausaufgabe. Sie haben zwei Möglichkeiten: Die erste besteht darin, das Datum anzugeben, zum Beispiel: \`2022-01-10 14:45\` (die Zeit muss im \`24-Stunden-Format\` sein), die zweite gibt die Uhrzeit nicht an , dh schreiben Sie \`0\` und Ihre Hausaufgabe wird ohne die angehängte Zeit sein.'
+
+
+hometask_done: '✅ Fertig'
+
+
+hometask_update: '✏️ Aktualisieren'
+hometask_update_alert: 'Hometask aktualisiert!'
+hometask_update_name: '📒 Hometask-Name aktualisieren'
+hometask_update_text: '📎 Hometask-Text aktualisieren'
+hometask_update_date: '⏰ Hometask-Zeit aktualisieren'
+hometask_new_name: 'OK. Schicken Sie mir den neuen Namen für Ihre Hausaufgabe.'
+hometask_new_text: 'OK. Schicken Sie mir den neuen Text für Ihre Hausaufgabe.'
+hometask_new_date: 'OK. Senden Sie mir die neue Uhrzeit (Frist / fällig bis) für Ihre Hausaufgabe. Sie haben zwei Möglichkeiten: Die erste besteht darin, das Datum anzugeben, zum Beispiel: \`2022-01-10 14:45\` (die Zeit muss im \`24-Stunden-Format\` sein), die zweite gibt die Uhrzeit nicht an , dh schreiben Sie \`0\` und Ihre Hausaufgabe wird ohne die angehängte Zeit sein.'
+
+
+hometask_delete: '🗑 Löschen'
+delete_hometask_alert: 'Hometask gelöscht!'
+delete_hometask: 'Du bist dabei deine Hometask zu löschen. Ist das korrekt?'
+delete_hometask_yes: '✅ Ja, lösche die Hometask'
+delete_hometask_no: '❌ Nein, egal'
+#---------------------------------------------------------------------------------

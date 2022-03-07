@@ -1,0 +1,83 @@
+error_message: 'Algo salió mal.'
+new: '🔥 Nueva tarea'
+time_left: '💣 Tiempo restante:'
+created_by: '👤 Creado por:'
+missing: '❌ ¡Falta tu tarea!'
+view: '👀 Ver'
+days: 'días'
+hours: 'horas'
+minutes: 'minutos'
+seconds: 'segundos'
+
+
+# ------------------------------- Menú ----------------------------------
+main_menu: 'Menú Principal'
+private_notes: '🔐 Notas Privadas'
+hometask: '📚 Tu hometask'
+# -----------------------------------------------------------------------
+
+
+#------------------------------- Notas ----------------------------------
+empty_notes_list: 'Actualmente no tienes notas. Intente agregar uno nuevo.'
+
+note_is_missing: '😬 ¡Falta tu nota!'
+
+new_note: '🆕 Agregar una nueva nota'
+new_note_alert: '¡Nueva nota agregada con éxito!'
+note_name: 'OK. Envíame el nombre de tu nota.'
+note_text: 'OK. Envíame el texto de tu nota.'
+note_date: 'OK. Envíeme la hora (también la fecha límite/vencimiento) de su nota. Tiene dos opciones: la primera es especificar la fecha, por ejemplo: \`2022-01-10 14:45\` (la hora debe estar en \`formato de 24 horas\`), la segunda no especifica la hora , es decir, escriba \`0\` y su nota será sin la hora adjunta.'
+
+
+note_done: '✅ Listo'
+
+
+note_update: '✏️ Actualizar'
+note_update_alert: '¡Nota actualizada!'
+note_update_name: '📒 Actualizar el nombre de la nota'
+note_update_text: '📎 Actualizar el texto de la nota'
+note_update_date: '⏰ Actualizar la hora de la nota'
+note_new_name: 'OK. Envíame el nuevo nombre de tu nota.'
+note_new_text: 'OK. Envíame el nuevo texto de tu nota.'
+note_new_date: 'OK. Envíeme la nueva hora (también la hora límite/vencimiento) para su nota. Tiene dos opciones: la primera es especificar la fecha, por ejemplo: \`2022-01-10 14:45\` (la hora debe estar en \`formato de 24 horas\`), la segunda no especifica la hora , es decir, escriba \`0\` y su nota será sin la hora adjunta.'
+
+
+note_delete: '🗑 Eliminar'
+delete_note_alert: '¡Nota eliminada!'
+delete_note: 'Estás a punto de eliminar tu nota. ¿Es eso correcto?'
+delete_note_yes: '✅ Sí, borra la nota'
+delete_note_no: '❌ No, no importa'
+#------------------------------------------------------------------------
+
+
+#---------------------------------- Tarea para la casa ----------------------------------
+empty_hometask_list: 'Actualmente no tienes hometask. Intente agregar uno nuevo.'
+
+update_hometask: '🔄 Actualizar tarea principal'
+
+new_hometask: '🆕 Añadir una nueva tarea'
+new_hometask_alert: '¡Nueva tarea casera agregada con éxito!'
+hometask_name: 'OK. Envíame el nombre de tu tarea.'
+hometask_text: 'OK. Envíame el texto para tu tarea.'
+hometask_date: 'OK. Envíame la hora (también la hora límite/fecha) para tu tarea. Tiene dos opciones: la primera es especificar la fecha, por ejemplo: \`2022-01-10 14:45\` (la hora debe estar en \`formato de 24 horas\`), la segunda no especifica la hora , es decir, escriba \`0\` y su tarea principal no tendrá el tiempo adjunto.'
+
+
+hometask_done: '✅ Listo'
+
+
+hometask_update: '✏️ Actualizar'
+hometask_update_alert: '¡Hometask actualizado!'
+hometask_update_name: '📒 Actualizar el nombre de la tarea principal'
+hometask_update_text: '📎 Actualizar el texto de la tarea principal'
+hometask_update_date: '⏰ Actualizar la hora de la tarea principal'
+hometask_new_name: 'OK. Envíame el nuevo nombre para tu tarea.'
+hometask_new_text: 'OK. Envíame el nuevo texto para tu tarea.'
+hometask_new_date: 'OK. Envíame la nueva hora (también la hora límite/vencimiento) para tu tarea. Tiene dos opciones: la primera es especificar la fecha, por ejemplo: \`2022-01-10 14:45\` (la hora debe estar en \`formato de 24 horas\`), la segunda no especifica la hora , es decir, escriba \`0\` y su tarea principal no tendrá el tiempo adjunto.'
+
+
+hometask_delete: '🗑 Eliminar'
+delete_hometask_alert: '¡Tarea eliminada!'
+delete_hometask: 'Estás a punto de eliminar tu tarea. ¿Es eso correcto?'
+delete_hometask_yes: '✅ Sí, elimina la tarea principal'
+delete_hometask_no: '❌ No, no importa'
+#----------------------------------------------------------------------------------------
