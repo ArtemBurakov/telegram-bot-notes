@@ -1,13 +1,13 @@
 error_message: 'Something has gone wrong.'
 new: '🔥 New hometask'
-time_left: '💣 Time left:'
+time_left: '💣 Remaining time:'
 created_by: '👤 Created by:'
 missing: '❌ Your hometask is missing!'
 view: '👀 View'
-days: 'days'
-hours: 'hours'
-minutes: 'minutes'
-seconds: 'seconds'
+days: 'd'
+hours: 'hrs'
+minutes: 'min'
+seconds: 'sec'
 
 
 # ------------------------------- Menu ----------------------------------
