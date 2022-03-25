@@ -208,10 +208,12 @@ const menuBodyNotes = async (context) => {
 	const pageIndex = (context.session.page_note ?? 1) - 1
 	const currentPageEntries = result.slice(pageIndex * ENTRIES_PER_PAGE_NOTE, (pageIndex + ENTRIES_PER_PAGE_NOTE) * 1)
 
-	if (currentPageEntries[0])
+	if (currentPageEntries[0]) {
 		context.session.selectedNote = currentPageEntries[0]
-	else
+	} else {
 		context.session.selectedNote = result[0]
+		context.session.page_note = 1
+	}
 
 	context.session.notes_length = result.length
 
@@ -355,10 +357,12 @@ const menuBodyHometask = async (context) => {
 	const pageIndex = (context.session.page_hometask ?? 1) - 1
 	const currentPageEntries = result.slice(pageIndex * ENTRIES_PER_PAGE_HOMETASK, (pageIndex + ENTRIES_PER_PAGE_HOMETASK) * 1)
 
-	if (currentPageEntries[0])
+	if (currentPageEntries[0]) {
 		context.session.selectedHometask = currentPageEntries[0]
-	else
+	} else {
 		context.session.selectedHometask = result[0]
+		context.session.page_hometask = 1
+	}
 
 	context.session.hometasks_length = result.length
 
