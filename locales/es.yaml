@@ -53,7 +53,7 @@ delete_note_no: '❌ No, no importa'
 #---------------------------------- Tarea para la casa ----------------------------------
 empty_hometask_list: 'Actualmente no tienes hometask. Intente agregar uno nuevo.'
 
-update_hometask: '🔄 Actualizar tarea principal'
+update_hometask: '🔄 Lista de actualizacion'
 
 new_hometask: '🆕 Añadir una nueva tarea'
 new_hometask_alert: '¡Nueva tarea casera agregada con éxito!'

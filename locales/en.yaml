@@ -53,7 +53,7 @@ delete_note_no: '❌ Nope, nevermind'
 #---------------------------------- Hometask ----------------------------------
 empty_hometask_list: 'Currently you do not have hometask. Try to add a new one.'
 
-update_hometask: '🔄 Update hometask'
+update_hometask: '🔄 Update list'
 
 new_hometask: '🆕 Add a new hometask'
 new_hometask_alert: 'New hometask added successful!'
