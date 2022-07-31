@@ -1,12 +1,13 @@
+const path = require('path')
 const { Bot, session } = require('grammy')
 const { MenuTemplate, MenuMiddleware, createBackMainMenuButtons } = require('grammy-inline-menu')
 const { StatelessQuestion } = require('@grammyjs/stateless-question')
-const { I18n } = require('@grammyjs/i18n');
+const { I18n } = require('@grammyjs/i18n')
 const CryptoJS = require("crypto-js")
 const userModel = require('./src/models/user.model')
 const hometaskModel = require('./src/models/hometask.model')
 const noteModel = require('./src/models/note.model')
-require('dotenv').config()
+require('dotenv').config({ path: path.resolve(__dirname, './.env') })
 
 const DELETED_STATUS = 0
 const ACTIVE_STATUS = 10
@@ -14,7 +15,7 @@ const DONE_STATUS = 20
 
 const i18n = new I18n({
 	defaultLanguageOnMissing: true,
-	directory: "locales",
+	directory: path.resolve(__dirname, 'locales'),
 	useSession: true,
 })
 
